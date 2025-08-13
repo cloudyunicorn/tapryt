@@ -217,10 +217,12 @@ export default function DashboardPage() {
           <div className="mb-8">
             <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Button className="h-auto p-4 bg-brand-gradient hover:opacity-90 flex-col gap-2">
-                <PlusIcon className="w-6 h-6" />
-                Create New Card
-              </Button>
+              <Link href="/create-card">
+                <Button className="h-auto p-4 bg-brand-gradient hover:opacity-90 flex-col gap-2">
+                  <PlusIcon className="w-6 h-6" />
+                  Create New Card
+                </Button>
+              </Link>
               <Button variant="outline" className="h-auto p-4 flex-col gap-2 border-primary hover:bg-primary/5">
                 <QrCodeIcon className="w-6 h-6 text-brand-blue" />
                 Generate QR Code
