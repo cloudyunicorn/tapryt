@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id             String      @id @db.Uuid // Supabase Auth UUID
+  name           String?
+  email          String      @unique
+  passwordHash   String?     // if email/password auth (optional for OAuth)
+  image          String?     // profile picture
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  // Relations
+  cards          Card[]
+  subscriptions  Subscription[]
+}
+
+model Card {
+  id             String      @id @default(cuid())
+  title          String
+  fullName       String
+  jobTitle       String?
+  company        String?
+  phone          String?
+  email          String?
+  website        String?
+  address        String?
+  bio            String?
+  profileImage   String?     // Supabase storage URL
+  qrCodeUrl      String?
+  slug           String      @unique
+  theme          String?
+  isPublic       Boolean     @default(true)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  // Relations
+  ownerId        String      @db.Uuid
+  owner          User        @relation(fields: [ownerId], references: [id])
+  socialLinks    SocialLink[]
+  analytics      CardAnalytics[]
+}
+
+model SocialLink {
+  id       String @id @default(cuid())
+  type     String
+  url      String
+
+  cardId   String
+  card     Card   @relation(fields: [cardId], references: [id])
+}
+
+model CardAnalytics {
+  id        String   @id @default(cuid())
+  cardId    String
+  card      Card     @relation(fields: [cardId], references: [id])
+  eventType String
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+}
+
+model Subscription {
+  id              String    @id @default(cuid())
+  userId          String    @db.Uuid
+  user            User      @relation(fields: [userId], references: [id])
+  plan            String
+  status          String
+  startDate       DateTime  @default(now())
+  endDate         DateTime?
+  razorpayId      String?
+  createdAt       DateTime  @default(now())
+}
