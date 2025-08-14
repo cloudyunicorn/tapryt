@@ -31,6 +31,7 @@ model User {
 
 model Card {
   id             String      @id @default(cuid())
+  publicId       String?     @unique
   title          String
   fullName       String
   jobTitle       String?
@@ -42,6 +43,7 @@ model Card {
   bio            String?
   profileImage   String?     // Supabase storage URL
   qrCodeUrl      String?
+  qrCodeData     String?     // Store the QR code data URL
   slug           String      @unique
   theme          String?
   isPublic       Boolean     @default(true)
