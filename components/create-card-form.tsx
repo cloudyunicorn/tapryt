@@ -1,59 +1,92 @@
-"use client";
+'use client';
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import { createCard } from "@/lib/actions/card.actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { 
-  UserIcon, 
-  BuildingOfficeIcon, 
+import { useState, useTransition } from 'react';
+import { useRouter } from 'next/navigation';
+import { createCard } from '@/lib/actions/card.actions';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import {
+  UserIcon,
+  BuildingOfficeIcon,
   PaintBrushIcon,
   ShareIcon,
   MapPinIcon,
   EyeIcon,
-  GlobeAltIcon
-} from "@heroicons/react/24/outline";
+  GlobeAltIcon,
+} from '@heroicons/react/24/outline';
+import { LiveCardPreview } from './live-card-preview';
 
 export function CreateCardForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [previewData, setPreviewData] = useState({
-    title: "My Business Card",
-    fullName: "Your Name",
-    jobTitle: "Your Job Title",
-    company: "Your Company",
-    email: "your.email@example.com",
-    phone: "+1 (555) 123-4567",
-    theme: "modern"
+
+  // Consolidated form state - this will preserve data across tab switches
+  const [formData, setFormData] = useState({
+    title: '',
+    fullName: '',
+    jobTitle: '',
+    company: '',
+    email: '',
+    phone: '',
+    website: '',
+    address: '',
+    bio: '',
+    linkedin: '',
+    twitter: '',
+    instagram: '',
+    facebook: '',
+    github: '',
+    theme: 'modern',
+    isPublic: true,
   });
 
-  const handleSubmit = async (formData: FormData) => {
+  // Preview data based on actual form values or placeholders
+  const previewData = {
+    title: formData.title || 'My Business Card',
+    fullName: formData.fullName || 'Your Name',
+    jobTitle: formData.jobTitle || 'Your Job Title',
+    company: formData.company || 'Your Company',
+    email: formData.email || 'your.email@example.com',
+    phone: formData.phone || '+1 (555) 123-4567',
+    theme: formData.theme,
+  };
+
+  // Handle form field changes
+  const handleInputChange = (field: string, value: string | boolean) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
     startTransition(async () => {
       setError(null);
-      
-      const result = await createCard(formData);
-      
+
+      // Create FormData from state
+      const submitFormData = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        submitFormData.append(key, value.toString());
+      });
+
+      const result = await createCard(submitFormData);
+
       if (result.success) {
         router.push(`/cards/${result.data.slug}`);
         router.refresh();
       } else {
-        setError(result.error || "Failed to create card");
+        setError(result.error || 'Failed to create card');
       }
     });
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setPreviewData(prev => ({
-      ...prev,
-      [field]: value || `Your ${field.charAt(0).toUpperCase() + field.slice(1)}`
-    }));
   };
 
   return (
@@ -65,14 +98,15 @@ export function CreateCardForm() {
           <span className="text-brand-gradient"> Digital Card</span>
         </h1>
         <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-          Fill in your professional information to create a stunning digital business card that represents you perfectly.
+          Fill in your professional information to create a stunning digital
+          business card that represents you perfectly.
         </p>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
         {/* Form Section */}
         <div className="space-y-6">
-          <form action={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <Tabs defaultValue="basic" className="w-full">
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic" className="flex items-center gap-2">
@@ -87,7 +121,10 @@ export function CreateCardForm() {
                   <PaintBrushIcon className="w-4 h-4" />
                   Design
                 </TabsTrigger>
-                <TabsTrigger value="settings" className="flex items-center gap-2">
+                <TabsTrigger
+                  value="settings"
+                  className="flex items-center gap-2"
+                >
                   <GlobeAltIcon className="w-4 h-4" />
                   Settings
                 </TabsTrigger>
@@ -110,9 +147,14 @@ export function CreateCardForm() {
                         name="title"
                         placeholder="My Professional Card"
                         required
-                        onChange={(e) => handleInputChange('title', e.target.value)}
+                        value={formData.title}
+                        onChange={(e) =>
+                          handleInputChange('title', e.target.value)
+                        }
                       />
-                      <p className="text-xs text-slate-500">This will be used in your card URL</p>
+                      <p className="text-xs text-slate-500">
+                        This will be used in your card URL
+                      </p>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
@@ -123,7 +165,10 @@ export function CreateCardForm() {
                           name="fullName"
                           placeholder="John Doe"
                           required
-                          onChange={(e) => handleInputChange('fullName', e.target.value)}
+                          value={formData.fullName}
+                          onChange={(e) =>
+                            handleInputChange('fullName', e.target.value)
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -132,7 +177,10 @@ export function CreateCardForm() {
                           id="jobTitle"
                           name="jobTitle"
                           placeholder="Senior Developer"
-                          onChange={(e) => handleInputChange('jobTitle', e.target.value)}
+                          value={formData.jobTitle}
+                          onChange={(e) =>
+                            handleInputChange('jobTitle', e.target.value)
+                          }
                         />
                       </div>
                     </div>
@@ -143,7 +191,10 @@ export function CreateCardForm() {
                         id="company"
                         name="company"
                         placeholder="Tech Solutions Inc."
-                        onChange={(e) => handleInputChange('company', e.target.value)}
+                        value={formData.company}
+                        onChange={(e) =>
+                          handleInputChange('company', e.target.value)
+                        }
                       />
                     </div>
 
@@ -155,7 +206,10 @@ export function CreateCardForm() {
                           name="email"
                           type="email"
                           placeholder="john@example.com"
-                          onChange={(e) => handleInputChange('email', e.target.value)}
+                          value={formData.email}
+                          onChange={(e) =>
+                            handleInputChange('email', e.target.value)
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -164,7 +218,10 @@ export function CreateCardForm() {
                           id="phone"
                           name="phone"
                           placeholder="+1 (555) 123-4567"
-                          onChange={(e) => handleInputChange('phone', e.target.value)}
+                          value={formData.phone}
+                          onChange={(e) =>
+                            handleInputChange('phone', e.target.value)
+                          }
                         />
                       </div>
                     </div>
@@ -175,6 +232,10 @@ export function CreateCardForm() {
                         id="website"
                         name="website"
                         placeholder="https://yourwebsite.com"
+                        value={formData.website}
+                        onChange={(e) =>
+                          handleInputChange('website', e.target.value)
+                        }
                       />
                     </div>
 
@@ -184,6 +245,10 @@ export function CreateCardForm() {
                         id="address"
                         name="address"
                         placeholder="123 Main St, City, State, Country"
+                        value={formData.address}
+                        onChange={(e) =>
+                          handleInputChange('address', e.target.value)
+                        }
                       />
                     </div>
 
@@ -194,6 +259,10 @@ export function CreateCardForm() {
                         name="bio"
                         placeholder="Brief description about yourself..."
                         rows={3}
+                        value={formData.bio}
+                        onChange={(e) =>
+                          handleInputChange('bio', e.target.value)
+                        }
                       />
                     </div>
                   </CardContent>
@@ -217,6 +286,10 @@ export function CreateCardForm() {
                           id="linkedin"
                           name="linkedin"
                           placeholder="https://linkedin.com/in/yourprofile"
+                          value={formData.linkedin}
+                          onChange={(e) =>
+                            handleInputChange('linkedin', e.target.value)
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -225,6 +298,10 @@ export function CreateCardForm() {
                           id="twitter"
                           name="twitter"
                           placeholder="https://twitter.com/yourusername"
+                          value={formData.twitter}
+                          onChange={(e) =>
+                            handleInputChange('twitter', e.target.value)
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -233,6 +310,10 @@ export function CreateCardForm() {
                           id="instagram"
                           name="instagram"
                           placeholder="https://instagram.com/yourusername"
+                          value={formData.instagram}
+                          onChange={(e) =>
+                            handleInputChange('instagram', e.target.value)
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -241,6 +322,10 @@ export function CreateCardForm() {
                           id="facebook"
                           name="facebook"
                           placeholder="https://facebook.com/yourprofile"
+                          value={formData.facebook}
+                          onChange={(e) =>
+                            handleInputChange('facebook', e.target.value)
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -249,6 +334,10 @@ export function CreateCardForm() {
                           id="github"
                           name="github"
                           placeholder="https://github.com/yourusername"
+                          value={formData.github}
+                          onChange={(e) =>
+                            handleInputChange('github', e.target.value)
+                          }
                         />
                       </div>
                     </div>
@@ -268,12 +357,14 @@ export function CreateCardForm() {
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="theme">Choose Theme</Label>
-                      <select 
-                        id="theme" 
-                        name="theme" 
+                      <select
+                        id="theme"
+                        name="theme"
                         className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-lg"
-                        defaultValue="modern"
-                        onChange={(e) => handleInputChange('theme', e.target.value)}
+                        value={formData.theme}
+                        onChange={(e) =>
+                          handleInputChange('theme', e.target.value)
+                        }
                       >
                         <option value="modern">Modern</option>
                         <option value="minimal">Minimal</option>
@@ -285,24 +376,41 @@ export function CreateCardForm() {
 
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                       {/* Theme Preview Cards */}
-                      {['modern', 'minimal', 'creative', 'professional', 'elegant'].map((theme) => (
+                      {[
+                        'modern',
+                        'minimal',
+                        'creative',
+                        'professional',
+                        'elegant',
+                      ].map((theme) => (
                         <label key={theme} className="cursor-pointer">
                           <input
                             type="radio"
-                            name="theme"
+                            name="themeRadio"
                             value={theme}
-                            defaultChecked={theme === 'modern'}
+                            checked={formData.theme === theme}
+                            onChange={(e) =>
+                              handleInputChange('theme', e.target.value)
+                            }
                             className="sr-only peer"
                           />
                           <div className="p-4 border-2 border-slate-200 peer-checked:border-primary rounded-lg transition-colors">
-                            <div className={`h-20 rounded ${
-                              theme === 'modern' ? 'bg-gradient-to-r from-blue-500 to-purple-600' :
-                              theme === 'minimal' ? 'bg-slate-100 border border-slate-300' :
-                              theme === 'creative' ? 'bg-gradient-to-r from-pink-500 to-orange-500' :
-                              theme === 'professional' ? 'bg-slate-800' :
-                              'bg-gradient-to-r from-emerald-500 to-teal-600'
-                            }`}></div>
-                            <p className="text-xs text-center mt-2 capitalize">{theme}</p>
+                            <div
+                              className={`h-20 rounded ${
+                                theme === 'modern'
+                                  ? 'bg-gradient-to-r from-blue-500 to-purple-600'
+                                  : theme === 'minimal'
+                                  ? 'bg-slate-100 border border-slate-300'
+                                  : theme === 'creative'
+                                  ? 'bg-gradient-to-r from-pink-500 to-orange-500'
+                                  : theme === 'professional'
+                                  ? 'bg-slate-800'
+                                  : 'bg-gradient-to-r from-emerald-500 to-teal-600'
+                              }`}
+                            ></div>
+                            <p className="text-xs text-center mt-2 capitalize">
+                              {theme}
+                            </p>
                           </div>
                         </label>
                       ))}
@@ -324,15 +432,27 @@ export function CreateCardForm() {
                     <div className="flex items-center justify-between">
                       <div>
                         <Label htmlFor="isPublic">Public Card</Label>
-                        <p className="text-sm text-slate-500">Allow your card to be discovered and shared publicly</p>
+                        <p className="text-sm text-slate-500">
+                          Allow your card to be discovered and shared publicly
+                        </p>
                       </div>
-                      <Switch id="isPublic" name="isPublic" defaultChecked />
+                      <Switch
+                        id="isPublic"
+                        name="isPublic"
+                        checked={formData.isPublic}
+                        onCheckedChange={(checked) =>
+                          handleInputChange('isPublic', checked)
+                        }
+                      />
                     </div>
 
                     <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <h4 className="font-semibold mb-2">Card URL Preview</h4>
                       <p className="text-sm text-slate-600 dark:text-slate-400 font-mono">
-                        tapryt.com/card/{previewData.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}
+                        tapryt.com/cards/[random-secure-url]
+                      </p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        Your card will have a unique, secure URL for sharing
                       </p>
                     </div>
                   </CardContent>
@@ -343,13 +463,15 @@ export function CreateCardForm() {
             {/* Error Display */}
             {error && (
               <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                <p className="text-sm text-red-600 dark:text-red-400">
+                  {error}
+                </p>
               </div>
             )}
 
             {/* Submit Button */}
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isPending}
               className="w-full h-12 bg-brand-gradient hover:opacity-90 text-white font-semibold text-base"
             >
@@ -359,53 +481,15 @@ export function CreateCardForm() {
                   Creating Your Card...
                 </div>
               ) : (
-                "Create Digital Card"
+                'Create Digital Card'
               )}
             </Button>
           </form>
         </div>
 
-        {/* Live Preview Section */}
+        {/* Live Preview Section - Now using the separated component */}
         <div className="lg:sticky lg:top-6">
-          <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <EyeIcon className="w-5 h-5" />
-                Live Preview
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className={`p-6 rounded-xl shadow-lg ${
-                previewData.theme === 'modern' ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' :
-                previewData.theme === 'minimal' ? 'bg-white text-slate-900 border border-slate-200' :
-                previewData.theme === 'creative' ? 'bg-gradient-to-r from-pink-500 to-orange-500 text-white' :
-                previewData.theme === 'professional' ? 'bg-slate-800 text-white' :
-                'bg-gradient-to-r from-emerald-500 to-teal-600 text-white'
-              }`}>
-                <div className="space-y-4">
-                  <div className="text-center">
-                    <div className="w-20 h-20 bg-white/20 rounded-full mx-auto mb-4 flex items-center justify-center">
-                      <UserIcon className="w-8 h-8" />
-                    </div>
-                    <h3 className="text-xl font-bold">{previewData.fullName}</h3>
-                    <p className="text-sm opacity-80">{previewData.jobTitle}</p>
-                    <p className="text-sm opacity-60">{previewData.company}</p>
-                  </div>
-                  
-                  <div className="space-y-2 text-center">
-                    <p className="text-sm">{previewData.email}</p>
-                    <p className="text-sm">{previewData.phone}</p>
-                  </div>
-                  
-                  <div className="flex justify-center gap-2">
-                    <div className="w-8 h-8 bg-white/20 rounded-full"></div>
-                    <div className="w-8 h-8 bg-white/20 rounded-full"></div>
-                    <div className="w-8 h-8 bg-white/20 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <LiveCardPreview formData={formData} />
         </div>
       </div>
     </div>
