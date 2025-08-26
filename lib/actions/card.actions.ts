@@ -124,7 +124,7 @@ export async function createCard(formData: FormData): Promise<ActionResult> {
 
     // Generate card URL for QR code
     const cardUrl = `${
-      process.env.NEXT_PUBLIC_APP_URL || 'https://tapryt.com'
+      process.env.NEXT_PUBLIC_APP_URL || 'https://tapryt.vercel.app'
     }/cards/${slug}`;
 
     // Generate QR code
