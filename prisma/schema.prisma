@@ -31,7 +31,6 @@ model User {
 
 model Card {
   id             String      @id @default(cuid())
-  publicId       String?     @unique
   title          String
   fullName       String
   jobTitle       String?
