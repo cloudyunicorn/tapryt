@@ -354,13 +354,18 @@ export async function getCardBySlug(
     }
 
     // Track view for public cards or owner views
-    if (trackView && (isPublic || isOwner)) {
-      await prisma.cardAnalytics.create({
-        data: {
-          cardId: card.id,
-          eventType: 'card_viewed',
-        },
-      });
+     if (trackView && isPublic) {
+      try {
+        await prisma.cardAnalytics.create({
+          data: {
+            cardId: card.id,
+            eventType: 'card_viewed',
+          },
+        });
+      } catch (error) {
+        // Don't fail the request if analytics fails
+        console.log('Failed to track view:', error);
+      }
     }
 
     return {
