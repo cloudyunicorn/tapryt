@@ -5,6 +5,7 @@ import prisma from '@/lib/prisma';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { generateQRCode, generateStyledQRCode } from '@/lib/utils/qrcode';
+import { v4 as uuidv4 } from 'uuid';
 
 // Import the correct transaction type
 import type { PrismaClient } from '@prisma/client';
@@ -38,22 +39,26 @@ export interface ActionResult {
 }
 
 // Generate unique slug for the card
-async function generateUniqueSlug(baseSlug: string): Promise<string> {
-  let slug = baseSlug
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-
-  let counter = 0;
-  let finalSlug = slug;
-
-  while (await prisma.card.findUnique({ where: { slug: finalSlug } })) {
-    counter++;
-    finalSlug = `${slug}-${counter}`;
+async function generateUniqueSlug(): Promise<string> {
+  let attempts = 0;
+  const maxAttempts = 5;
+  
+  while (attempts < maxAttempts) {
+    const slug = uuidv4(); // Generates: 'f47ac10b-58cc-4372-a567-0e02b2c3d479'
+    
+    const existing = await prisma.card.findUnique({ 
+      where: { slug } 
+    });
+    
+    if (!existing) {
+      return slug;
+    }
+    
+    attempts++;
   }
-
-  return finalSlug;
+  
+  // Fallback: add timestamp to ensure uniqueness
+  return `${uuidv4()}-${Date.now()}`;
 }
 
 export async function createCard(formData: FormData): Promise<ActionResult> {
@@ -120,7 +125,7 @@ export async function createCard(formData: FormData): Promise<ActionResult> {
     }
 
     // Generate unique slug from title
-    const slug = await generateUniqueSlug(cardData.title);
+    const slug = await generateUniqueSlug();
 
     // Generate card URL for QR code
     const cardUrl = `${
@@ -489,7 +494,7 @@ export async function updateCard(
     // Generate new slug if title changed
     let slug = existingCard.slug;
     if (cardData.title !== existingCard.title) {
-      slug = await generateUniqueSlug(cardData.title);
+      slug = await generateUniqueSlug();
     }
 
     // Generate new QR code if slug changed
