@@ -2,9 +2,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "prisma generate && prisma migrate deploy && next build",
     "start": "next start",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "migrate": "prisma migrate deploy"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
