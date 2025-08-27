@@ -12,22 +12,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import {
   UserIcon,
-  BuildingOfficeIcon,
-  PaintBrushIcon,
   ShareIcon,
-  MapPinIcon,
-  EyeIcon,
+  PaintBrushIcon,
   GlobeAltIcon,
 } from '@heroicons/react/24/outline';
 import { LiveCardPreview } from './live-card-preview';
+import { CardDesignTab } from './card-design-tab';
 
 export function CreateCardForm() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  // Consolidated form state - this will preserve data across tab switches
+  // Consolidated form state
   const [formData, setFormData] = useState({
+    // Basic info
     title: '',
     fullName: '',
     jobTitle: '',
@@ -42,31 +41,38 @@ export function CreateCardForm() {
     instagram: '',
     facebook: '',
     github: '',
-    theme: 'modern',
     isPublic: true,
+
+    // Design properties
+    theme: 'modern',
+    primaryColor: '#3B82F6',
+    secondaryColor: '#8B5CF6',
+    backgroundColor: '#FFFFFF',
+    textColor: '#1F2937',
+    fontFamily: 'inter',
+    fontSize: 16,
+    borderRadius: 12,
+    borderWidth: 0,
+    borderColor: '#E5E7EB',
+    shadowIntensity: 3,
+    backgroundPattern: 'none',
+    gradientDirection: 'to-r',
+    cardShape: 'rounded',
+    layout: 'centered',
   });
 
-  // Preview data based on actual form values or placeholders
-  const previewData = {
-    title: formData.title || 'My Business Card',
-    fullName: formData.fullName || 'Your Name',
-    jobTitle: formData.jobTitle || 'Your Job Title',
-    company: formData.company || 'Your Company',
-    email: formData.email || 'your.email@example.com',
-    phone: formData.phone || '+1 (555) 123-4567',
-    theme: formData.theme,
-  };
-
-  // Handle form field changes
-  const handleInputChange = (field: string, value: string | boolean) => {
+  // Handle ALL state changes (both form and design)
+  const handleInputChange = (field: string, value: string | boolean | number) => {
+    console.log('✅ State update only:', field, value);
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
 
-  // Handle form submission
+  // Handle form submission ONLY
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('🚨 Form submitted - Creating card in database');
     e.preventDefault();
 
     startTransition(async () => {
@@ -104,10 +110,11 @@ export function CreateCardForm() {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-8">
-        {/* Form Section */}
+        {/* LEFT COLUMN: Form with ALL tabs including Design */}
         <div className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6">
             <Tabs defaultValue="basic" className="w-full">
+              {/* ALL FOUR TABS including Design */}
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="basic" className="flex items-center gap-2">
                   <UserIcon className="w-4 h-4" />
@@ -121,10 +128,7 @@ export function CreateCardForm() {
                   <PaintBrushIcon className="w-4 h-4" />
                   Design
                 </TabsTrigger>
-                <TabsTrigger
-                  value="settings"
-                  className="flex items-center gap-2"
-                >
+                <TabsTrigger value="settings" className="flex items-center gap-2">
                   <GlobeAltIcon className="w-4 h-4" />
                   Settings
                 </TabsTrigger>
@@ -148,12 +152,10 @@ export function CreateCardForm() {
                         placeholder="My Professional Card"
                         required
                         value={formData.title}
-                        onChange={(e) =>
-                          handleInputChange('title', e.target.value)
-                        }
+                        onChange={(e) => handleInputChange('title', e.target.value)}
                       />
                       <p className="text-xs text-slate-500">
-                        This will be used in your card URL
+                        For internal reference only
                       </p>
                     </div>
 
@@ -166,9 +168,7 @@ export function CreateCardForm() {
                           placeholder="John Doe"
                           required
                           value={formData.fullName}
-                          onChange={(e) =>
-                            handleInputChange('fullName', e.target.value)
-                          }
+                          onChange={(e) => handleInputChange('fullName', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
@@ -178,9 +178,7 @@ export function CreateCardForm() {
                           name="jobTitle"
                           placeholder="Senior Developer"
                           value={formData.jobTitle}
-                          onChange={(e) =>
-                            handleInputChange('jobTitle', e.target.value)
-                          }
+                          onChange={(e) => handleInputChange('jobTitle', e.target.value)}
                         />
                       </div>
                     </div>
@@ -192,9 +190,7 @@ export function CreateCardForm() {
                         name="company"
                         placeholder="Tech Solutions Inc."
                         value={formData.company}
-                        onChange={(e) =>
-                          handleInputChange('company', e.target.value)
-                        }
+                        onChange={(e) => handleInputChange('company', e.target.value)}
                       />
                     </div>
 
@@ -207,9 +203,7 @@ export function CreateCardForm() {
                           type="email"
                           placeholder="john@example.com"
                           value={formData.email}
-                          onChange={(e) =>
-                            handleInputChange('email', e.target.value)
-                          }
+                          onChange={(e) => handleInputChange('email', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
@@ -219,9 +213,7 @@ export function CreateCardForm() {
                           name="phone"
                           placeholder="+1 (555) 123-4567"
                           value={formData.phone}
-                          onChange={(e) =>
-                            handleInputChange('phone', e.target.value)
-                          }
+                          onChange={(e) => handleInputChange('phone', e.target.value)}
                         />
                       </div>
                     </div>
@@ -233,9 +225,7 @@ export function CreateCardForm() {
                         name="website"
                         placeholder="https://yourwebsite.com"
                         value={formData.website}
-                        onChange={(e) =>
-                          handleInputChange('website', e.target.value)
-                        }
+                        onChange={(e) => handleInputChange('website', e.target.value)}
                       />
                     </div>
 
@@ -246,9 +236,7 @@ export function CreateCardForm() {
                         name="address"
                         placeholder="123 Main St, City, State, Country"
                         value={formData.address}
-                        onChange={(e) =>
-                          handleInputChange('address', e.target.value)
-                        }
+                        onChange={(e) => handleInputChange('address', e.target.value)}
                       />
                     </div>
 
@@ -260,9 +248,7 @@ export function CreateCardForm() {
                         placeholder="Brief description about yourself..."
                         rows={3}
                         value={formData.bio}
-                        onChange={(e) =>
-                          handleInputChange('bio', e.target.value)
-                        }
+                        onChange={(e) => handleInputChange('bio', e.target.value)}
                       />
                     </div>
                   </CardContent>
@@ -287,9 +273,7 @@ export function CreateCardForm() {
                           name="linkedin"
                           placeholder="https://linkedin.com/in/yourprofile"
                           value={formData.linkedin}
-                          onChange={(e) =>
-                            handleInputChange('linkedin', e.target.value)
-                          }
+                          onChange={(e) => handleInputChange('linkedin', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
@@ -299,9 +283,7 @@ export function CreateCardForm() {
                           name="twitter"
                           placeholder="https://twitter.com/yourusername"
                           value={formData.twitter}
-                          onChange={(e) =>
-                            handleInputChange('twitter', e.target.value)
-                          }
+                          onChange={(e) => handleInputChange('twitter', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
@@ -311,9 +293,7 @@ export function CreateCardForm() {
                           name="instagram"
                           placeholder="https://instagram.com/yourusername"
                           value={formData.instagram}
-                          onChange={(e) =>
-                            handleInputChange('instagram', e.target.value)
-                          }
+                          onChange={(e) => handleInputChange('instagram', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
@@ -323,9 +303,7 @@ export function CreateCardForm() {
                           name="facebook"
                           placeholder="https://facebook.com/yourprofile"
                           value={formData.facebook}
-                          onChange={(e) =>
-                            handleInputChange('facebook', e.target.value)
-                          }
+                          onChange={(e) => handleInputChange('facebook', e.target.value)}
                         />
                       </div>
                       <div className="space-y-2">
@@ -335,9 +313,7 @@ export function CreateCardForm() {
                           name="github"
                           placeholder="https://github.com/yourusername"
                           value={formData.github}
-                          onChange={(e) =>
-                            handleInputChange('github', e.target.value)
-                          }
+                          onChange={(e) => handleInputChange('github', e.target.value)}
                         />
                       </div>
                     </div>
@@ -345,78 +321,12 @@ export function CreateCardForm() {
                 </Card>
               </TabsContent>
 
-              {/* Design Tab */}
+              {/* DESIGN TAB - INSIDE THE FORM BUT WITH SAFE EVENT HANDLING */}
               <TabsContent value="design" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <PaintBrushIcon className="w-5 h-5" />
-                      Card Theme
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="theme">Choose Theme</Label>
-                      <select
-                        id="theme"
-                        name="theme"
-                        className="w-full p-3 border border-slate-200 dark:border-slate-700 rounded-lg"
-                        value={formData.theme}
-                        onChange={(e) =>
-                          handleInputChange('theme', e.target.value)
-                        }
-                      >
-                        <option value="modern">Modern</option>
-                        <option value="minimal">Minimal</option>
-                        <option value="creative">Creative</option>
-                        <option value="professional">Professional</option>
-                        <option value="elegant">Elegant</option>
-                      </select>
-                    </div>
-
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      {/* Theme Preview Cards */}
-                      {[
-                        'modern',
-                        'minimal',
-                        'creative',
-                        'professional',
-                        'elegant',
-                      ].map((theme) => (
-                        <label key={theme} className="cursor-pointer">
-                          <input
-                            type="radio"
-                            name="themeRadio"
-                            value={theme}
-                            checked={formData.theme === theme}
-                            onChange={(e) =>
-                              handleInputChange('theme', e.target.value)
-                            }
-                            className="sr-only peer"
-                          />
-                          <div className="p-4 border-2 border-slate-200 peer-checked:border-primary rounded-lg transition-colors">
-                            <div
-                              className={`h-20 rounded ${
-                                theme === 'modern'
-                                  ? 'bg-gradient-to-r from-blue-500 to-purple-600'
-                                  : theme === 'minimal'
-                                  ? 'bg-slate-100 border border-slate-300'
-                                  : theme === 'creative'
-                                  ? 'bg-gradient-to-r from-pink-500 to-orange-500'
-                                  : theme === 'professional'
-                                  ? 'bg-slate-800'
-                                  : 'bg-gradient-to-r from-emerald-500 to-teal-600'
-                              }`}
-                            ></div>
-                            <p className="text-xs text-center mt-2 capitalize">
-                              {theme}
-                            </p>
-                          </div>
-                        </label>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                <CardDesignTab
+                  designData={formData}
+                  onDesignChange={handleInputChange}
+                />
               </TabsContent>
 
               {/* Settings Tab */}
@@ -463,13 +373,11 @@ export function CreateCardForm() {
             {/* Error Display */}
             {error && (
               <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <p className="text-sm text-red-600 dark:text-red-400">
-                  {error}
-                </p>
+                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
               </div>
             )}
 
-            {/* Submit Button */}
+            {/* Submit Button - ONLY THIS should trigger form submission */}
             <Button
               type="submit"
               disabled={isPending}
@@ -487,7 +395,7 @@ export function CreateCardForm() {
           </form>
         </div>
 
-        {/* Live Preview Section - Now using the separated component */}
+        {/* RIGHT COLUMN: Live Preview */}
         <div className="lg:sticky lg:top-6">
           <LiveCardPreview formData={formData} />
         </div>
