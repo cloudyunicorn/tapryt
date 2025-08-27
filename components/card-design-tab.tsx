@@ -46,12 +46,22 @@ export function CardDesignTab({ designData, onDesignChange }: CardDesignTabProps
   const applyTheme = (e: React.MouseEvent, theme: ThemeConfig) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('🎨 Applying theme:', theme.id);
     onDesignChange('theme', theme.id);
     onDesignChange('primaryColor', theme.colors[0]);
     onDesignChange('secondaryColor', theme.colors[1]);
     onDesignChange('gradientDirection', 'to-r');
     // Reset text color to auto-adaptive when theme changes
     onDesignChange('textColor', '');
+  };
+
+  // ✅ Helper function to create gradient style from theme
+  const getThemeGradientStyle = (theme: ThemeConfig): React.CSSProperties => {
+    return {
+      backgroundImage: `linear-gradient(to right, ${theme.colors[0]}, ${theme.colors[1]})`,
+      backgroundSize: 'cover',
+      backgroundRepeat: 'no-repeat'
+    };
   };
 
   const handlePatternClick = (e: React.MouseEvent, patternId: string) => {
@@ -96,7 +106,7 @@ export function CardDesignTab({ designData, onDesignChange }: CardDesignTabProps
             <TabsTrigger value="effects" className="text-xs">Effects</TabsTrigger>
           </TabsList>
 
-          {/* Themes Tab */}
+          {/* Themes Tab - FIXED with inline styles */}
           <TabsContent value="themes" className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               {THEMES.map((theme) => (
@@ -109,7 +119,11 @@ export function CardDesignTab({ designData, onDesignChange }: CardDesignTabProps
                         : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
-                    <div className={`h-12 rounded-md bg-gradient-to-r ${theme.gradient} mb-2`} />
+                    {/* ✅ FIXED: Use inline styles instead of Tailwind gradient classes */}
+                    <div 
+                      className="h-12 rounded-md mb-2"
+                      style={getThemeGradientStyle(theme)}
+                    />
                     <p className="text-xs font-medium">{theme.name}</p>
                     {theme.description && (
                       <p className="text-xs text-slate-500 mt-1 line-clamp-2">{theme.description}</p>
@@ -128,7 +142,7 @@ export function CardDesignTab({ designData, onDesignChange }: CardDesignTabProps
             </div>
           </TabsContent>
 
-          {/* Colors Tab - UPDATED with Text Color instead of Primary/Secondary */}
+          {/* Colors Tab - Updated with Text Color */}
           <TabsContent value="colors" className="space-y-4">
             {/* Text Color Control */}
             <div className="space-y-2">
@@ -197,6 +211,7 @@ export function CardDesignTab({ designData, onDesignChange }: CardDesignTabProps
                         : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
+                    {/* ✅ FIXED: Enhanced pattern previews with actual patterns */}
                     <div className="h-8 w-full bg-slate-100 mb-1 rounded relative overflow-hidden">
                       {pattern.id === 'dots' && (
                         <div className="absolute inset-0 opacity-60" style={{
@@ -213,6 +228,18 @@ export function CardDesignTab({ designData, onDesignChange }: CardDesignTabProps
                       {pattern.id === 'diagonal' && (
                         <div className="absolute inset-0 opacity-60" style={{
                           backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 4px, #666 4px, #666 8px)'
+                        }} />
+                      )}
+                      {pattern.id === 'waves' && (
+                        <div className="absolute inset-0 opacity-40" style={{
+                          backgroundImage: 'radial-gradient(ellipse at top, #666, transparent 50%)',
+                          backgroundSize: '12px 12px'
+                        }} />
+                      )}
+                      {pattern.id === 'circles' && (
+                        <div className="absolute inset-0 opacity-60" style={{
+                          backgroundImage: 'radial-gradient(circle at 4px 4px, #666 1px, transparent 1px)',
+                          backgroundSize: '12px 12px'
                         }} />
                       )}
                     </div>
