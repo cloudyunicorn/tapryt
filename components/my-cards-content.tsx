@@ -16,9 +16,18 @@ import {
   QrCodeIcon,
   ChartBarIcon,
   GlobeAltIcon,
-  LockClosedIcon
+  LockClosedIcon,
+  UserIcon
 } from "@heroicons/react/24/outline";
 import { format } from "date-fns";
+
+// ✅ Import design system utilities
+import {
+  getThemeById,
+  getFontById,
+  getLayoutById,
+  DESIGN_DEFAULTS
+} from "@/lib/design-system";
 
 interface CardData {
   id: string;
@@ -64,23 +73,6 @@ export function MyCardsContent({ cards, user }: MyCardsContentProps) {
           return 0;
       }
     });
-
-  const getThemeColors = (theme?: string) => {
-    switch (theme) {
-      case 'modern':
-        return 'from-blue-500 to-purple-600';
-      case 'minimal':
-        return 'from-slate-400 to-slate-600';
-      case 'creative':
-        return 'from-pink-500 to-orange-500';
-      case 'professional':
-        return 'from-slate-700 to-slate-900';
-      case 'elegant':
-        return 'from-emerald-500 to-teal-600';
-      default:
-        return 'from-blue-500 to-purple-600';
-    }
-  };
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8">
@@ -166,7 +158,7 @@ export function MyCardsContent({ cards, user }: MyCardsContentProps) {
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCards.map((card) => (
-            <CardItem key={card.id} card={card} getThemeColors={getThemeColors} />
+            <CardItem key={card.id} card={card} />
           ))}
         </div>
       )}
@@ -174,8 +166,67 @@ export function MyCardsContent({ cards, user }: MyCardsContentProps) {
   );
 }
 
-// Individual Card Component
-function CardItem({ card, getThemeColors }: { card: CardData; getThemeColors: (theme?: string) => string }) {
+// ✅ Updated Individual Card Component with Design System
+function CardItem({ card }: { card: CardData }) {
+  const [copied, setCopied] = useState(false);
+
+  // ✅ Get theme configuration from design system
+  const themeConfig = getThemeById(card.theme || DESIGN_DEFAULTS.theme) || getThemeById(DESIGN_DEFAULTS.theme)!;
+  const fontConfig = getFontById(DESIGN_DEFAULTS.fontFamily);
+
+  // ✅ Create theme styles using design system
+  const getCardPreviewStyles = (): React.CSSProperties => {
+    const primaryColor = themeConfig.colors[0];
+    const secondaryColor = themeConfig.colors[1];
+
+    return {
+      backgroundImage: `linear-gradient(to right, ${primaryColor}, ${secondaryColor})`,
+      backgroundColor: primaryColor, // Fallback
+      color: themeConfig.textColor,
+      fontFamily: fontConfig?.fontFamily || 'Inter, sans-serif',
+      padding: '1rem',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      minHeight: '120px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    };
+  };
+
+  // ✅ Share functionality
+  const shareCard = async () => {
+    const shareUrl = `${window.location.origin}/cards/${card.slug}`;
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${card.fullName}'s Digital Business Card`,
+          text: `Check out ${card.fullName}'s digital business card`,
+          url: shareUrl,
+        });
+      } catch (error) {
+        console.error('Error sharing:', error);
+        copyToClipboard(shareUrl);
+      }
+    } else {
+      copyToClipboard(shareUrl);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      console.error('Failed to copy:', error);
+    }
+  };
+
+  const cardPreviewStyles = getCardPreviewStyles();
+
   return (
     <Card className="group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-slate-200 dark:border-slate-700">
       <CardHeader className="pb-2">
@@ -183,9 +234,15 @@ function CardItem({ card, getThemeColors }: { card: CardData; getThemeColors: (t
           <div className="space-y-1 flex-1">
             <CardTitle className="text-lg line-clamp-1">{card.title}</CardTitle>
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className={`bg-gradient-to-r ${getThemeColors(card.theme)} text-white text-xs`}>
-                {card.theme || 'modern'}
-              </Badge>
+              {/* ✅ Theme badge with actual theme colors */}
+              <div
+                className="px-2 py-1 rounded text-xs text-white font-medium"
+                style={{
+                  backgroundImage: `linear-gradient(to right, ${themeConfig.colors[0]}, ${themeConfig.colors[1]})`,
+                }}
+              >
+                {themeConfig.name}
+              </div>
               <Badge variant="outline" className="text-xs">
                 {card.isPublic ? (
                   <div className="flex items-center gap-1">
@@ -205,19 +262,39 @@ function CardItem({ card, getThemeColors }: { card: CardData; getThemeColors: (t
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Card Preview */}
+        {/* ✅ Card Preview with Design System Styles */}
         <Link href={`/cards/${card.slug}`}>
           <div 
-            className={`p-4 rounded-lg cursor-pointer transition-all duration-200 hover:scale-105 bg-gradient-to-r ${getThemeColors(card.theme)}`}
+            className="cursor-pointer transition-all duration-200 hover:scale-105"
+            style={cardPreviewStyles}
           >
-            <div className="text-center text-white space-y-2">
-              <div className="w-12 h-12 bg-white/20 rounded-full mx-auto flex items-center justify-center">
-                <span className="text-lg font-bold">{card.fullName.charAt(0)}</span>
+            <div className="text-center space-y-2">
+              <div 
+                className="w-12 h-12 rounded-full mx-auto flex items-center justify-center"
+                style={{ backgroundColor: `${themeConfig.textColor}20` }}
+              >
+                {card.fullName ? (
+                  <span className="text-lg font-bold" style={{ color: themeConfig.textColor }}>
+                    {card.fullName.charAt(0)}
+                  </span>
+                ) : (
+                  <UserIcon className="w-6 h-6" style={{ color: themeConfig.textColor }} />
+                )}
               </div>
               <div>
-                <h3 className="font-semibold text-sm">{card.fullName}</h3>
-                {card.jobTitle && <p className="text-xs opacity-80">{card.jobTitle}</p>}
-                {card.company && <p className="text-xs opacity-60">{card.company}</p>}
+                <h3 className="font-semibold text-sm" style={{ color: themeConfig.textColor }}>
+                  {card.fullName}
+                </h3>
+                {card.jobTitle && (
+                  <p className="text-xs opacity-80" style={{ color: themeConfig.textColor }}>
+                    {card.jobTitle}
+                  </p>
+                )}
+                {card.company && (
+                  <p className="text-xs opacity-60" style={{ color: themeConfig.textColor }}>
+                    {card.company}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -247,18 +324,29 @@ function CardItem({ card, getThemeColors }: { card: CardData; getThemeColors: (t
               View
             </Button>
           </Link>
-          <Button variant="outline" size="sm" className="flex-1">
+          <Button variant="outline" size="sm" className="flex-1" onClick={shareCard}>
             <ShareIcon className="w-4 h-4 mr-2" />
             Share
           </Button>
-          <Button variant="outline" size="sm">
-            <QrCodeIcon className="w-4 h-4" />
-          </Button>
-          <Button variant="outline" size="sm">
-            <PencilIcon className="w-4 h-4" />
-          </Button>
+          <Link href={`/cards/${card.slug}`}>
+            <Button variant="outline" size="sm">
+              <QrCodeIcon className="w-4 h-4" />
+            </Button>
+          </Link>
+          <Link href={`/cards/${card.slug}/edit`}>
+            <Button variant="outline" size="sm">
+              <PencilIcon className="w-4 h-4" />
+            </Button>
+          </Link>
         </div>
       </CardContent>
+
+      {/* Copy notification */}
+      {copied && (
+        <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded text-xs">
+          Copied!
+        </div>
+      )}
     </Card>
   );
 }

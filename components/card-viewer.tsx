@@ -22,6 +22,15 @@ import {
 } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 
+// ✅ Import design system utilities
+import {
+  getThemeById,
+  getFontById,
+  getLayoutById,
+  getShadowClass,
+  DESIGN_DEFAULTS
+} from '@/lib/design-system';
+
 interface SocialLink {
   id: string;
   type: string;
@@ -68,41 +77,40 @@ export function CardViewer({ card, isOwner, user }: CardViewerProps) {
   const [showQR, setShowQR] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const getThemeStyles = (theme?: string) => {
-    switch (theme) {
-      case 'modern':
-        return {
-          container: 'bg-gradient-to-br from-blue-500 to-purple-600 text-white',
-          accent: 'bg-white/20',
-        };
-      case 'minimal':
-        return {
-          container:
-            'bg-white text-slate-900 border border-slate-200 shadow-lg',
-          accent: 'bg-slate-100',
-        };
-      case 'creative':
-        return {
-          container: 'bg-gradient-to-br from-pink-500 to-orange-500 text-white',
-          accent: 'bg-white/20',
-        };
-      case 'professional':
-        return {
-          container: 'bg-slate-800 text-white',
-          accent: 'bg-white/20',
-        };
-      case 'elegant':
-        return {
-          container:
-            'bg-gradient-to-br from-emerald-500 to-teal-600 text-white',
-          accent: 'bg-white/20',
-        };
-      default:
-        return {
-          container: 'bg-gradient-to-br from-blue-500 to-purple-600 text-white',
-          accent: 'bg-white/20',
-        };
-    }
+  console.log(card);
+
+  // ✅ Get theme configuration from design system
+  const themeConfig = getThemeById(card.theme || DESIGN_DEFAULTS.theme) || getThemeById(DESIGN_DEFAULTS.theme)!;
+  const fontConfig = getFontById(DESIGN_DEFAULTS.fontFamily);
+  const layoutConfig = getLayoutById(DESIGN_DEFAULTS.layout);
+
+  // ✅ Create comprehensive card styles using design system
+  const getCardStyles = (): React.CSSProperties => {
+    const primaryColor = themeConfig.colors[0];
+    const secondaryColor = themeConfig.colors[1];
+
+    return {
+      // Use inline gradient instead of Tailwind classes
+      backgroundImage: `linear-gradient(to bottom right, ${primaryColor}, ${secondaryColor})`,
+      backgroundColor: primaryColor, // Fallback
+      color: themeConfig.textColor,
+      fontFamily: fontConfig?.fontFamily || 'Inter, sans-serif',
+      padding: '2rem',
+      borderRadius: '12px',
+      position: 'relative',
+      overflow: 'hidden',
+      transition: 'all 0.3s ease',
+    };
+  };
+
+  // ✅ Get accent styles for interactive elements
+  const getAccentStyles = (): React.CSSProperties => {
+    // Create semi-transparent background based on text color
+    const isLightText = themeConfig.textColor === '#FFFFFF';
+    return {
+      backgroundColor: isLightText ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)',
+      borderRadius: '8px',
+    };
   };
 
   const getSocialIcon = (type: string) => {
@@ -170,7 +178,8 @@ END:VCARD`;
     window.URL.revokeObjectURL(url);
   };
 
-  const themeStyles = getThemeStyles(card.theme);
+  const cardStyles = getCardStyles();
+  const accentStyles = getAccentStyles();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
@@ -231,14 +240,18 @@ END:VCARD`;
               </Badge>
             </div>
 
-            {/* Main Card */}
-            <Card
-              className={`p-8 ${themeStyles.container} shadow-2xl transform hover:scale-[1.02] transition-transform duration-300`}
+            {/* ✅ Main Card with design system styles */}
+            <div
+              className="shadow-2xl transform hover:scale-[1.02] transition-transform duration-300"
+              style={cardStyles}
             >
               <div className="space-y-6 text-center">
                 {/* Profile Image */}
                 <div className="flex justify-center">
-                  <div className="w-32 h-32 rounded-full overflow-hidden bg-white/20 flex items-center justify-center">
+                  <div 
+                    className="w-32 h-32 rounded-full overflow-hidden flex items-center justify-center"
+                    style={accentStyles}
+                  >
                     {card.profileImage ? (
                       <img
                         src={card.profileImage}
@@ -253,7 +266,9 @@ END:VCARD`;
 
                 {/* Basic Info */}
                 <div className="space-y-3">
-                  <h1 className="text-3xl font-bold">{card.fullName}</h1>
+                  <h1 className="text-3xl font-bold" style={{ color: themeConfig.textColor }}>
+                    {card.fullName}
+                  </h1>
                   {card.jobTitle && (
                     <div className="flex items-center justify-center gap-2">
                       <BuildingOfficeIcon className="w-5 h-5 opacity-80" />
@@ -268,52 +283,57 @@ END:VCARD`;
                 {/* Contact Info */}
                 <div className="space-y-4">
                   {card.email && (
-                    <div className="flex items-center justify-center gap-3 p-3 rounded-lg bg-white/10">
+                    <div className="flex items-center justify-center gap-3 p-3 rounded-lg" style={accentStyles}>
                       <EnvelopeIcon className="w-5 h-5 opacity-80" />
                       <a
                         href={`mailto:${card.email}`}
                         className="hover:underline transition-colors"
+                        style={{ color: themeConfig.textColor }}
                       >
                         {card.email}
                       </a>
                     </div>
                   )}
                   {card.phone && (
-                    <div className="flex items-center justify-center gap-3 p-3 rounded-lg bg-white/10">
+                    <div className="flex items-center justify-center gap-3 p-3 rounded-lg" style={accentStyles}>
                       <PhoneIcon className="w-5 h-5 opacity-80" />
                       <a
                         href={`tel:${card.phone}`}
                         className="hover:underline transition-colors"
+                        style={{ color: themeConfig.textColor }}
                       >
                         {card.phone}
                       </a>
                     </div>
                   )}
                   {card.website && (
-                    <div className="flex items-center justify-center gap-3 p-3 rounded-lg bg-white/10">
+                    <div className="flex items-center justify-center gap-3 p-3 rounded-lg" style={accentStyles}>
                       <GlobeAltIcon className="w-5 h-5 opacity-80" />
                       <a
                         href={card.website}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:underline transition-colors"
+                        style={{ color: themeConfig.textColor }}
                       >
                         Visit Website
                       </a>
                     </div>
                   )}
                   {card.address && (
-                    <div className="flex items-center justify-center gap-3 p-3 rounded-lg bg-white/10">
+                    <div className="flex items-center justify-center gap-3 p-3 rounded-lg" style={accentStyles}>
                       <MapPinIcon className="w-5 h-5 opacity-80" />
-                      <span className="text-center">{card.address}</span>
+                      <span className="text-center" style={{ color: themeConfig.textColor }}>
+                        {card.address}
+                      </span>
                     </div>
                   )}
                 </div>
 
                 {/* Bio */}
                 {card.bio && (
-                  <div className="p-4 rounded-lg bg-white/10">
-                    <p className="opacity-90 leading-relaxed text-center">
+                  <div className="p-4 rounded-lg" style={accentStyles}>
+                    <p className="opacity-90 leading-relaxed text-center" style={{ color: themeConfig.textColor }}>
                       {card.bio}
                     </p>
                   </div>
@@ -322,7 +342,9 @@ END:VCARD`;
                 {/* Social Links */}
                 {card.socialLinks && card.socialLinks.length > 0 && (
                   <div className="pt-4">
-                    <p className="text-sm opacity-80 mb-4">Connect with me:</p>
+                    <p className="text-sm opacity-80 mb-4" style={{ color: themeConfig.textColor }}>
+                      Connect with me:
+                    </p>
                     <div className="flex justify-center gap-4 flex-wrap">
                       {card.socialLinks.map((link) => (
                         <a
@@ -330,7 +352,8 @@ END:VCARD`;
                           href={link.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`w-12 h-12 ${themeStyles.accent} rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-200`}
+                          className="w-12 h-12 rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-200"
+                          style={accentStyles}
                           title={`${link.type} - ${link.url}`}
                         >
                           <span className="text-xl">
@@ -342,7 +365,7 @@ END:VCARD`;
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
           </div>
 
           {/* Actions & Info Sidebar */}
@@ -407,7 +430,6 @@ END:VCARD`;
                       size="sm"
                       className="mt-2"
                       onClick={() => {
-                        // You could add a regenerate QR code function here
                         window.location.reload();
                       }}
                     >
@@ -418,7 +440,7 @@ END:VCARD`;
               </Card>
             )}
 
-            {/* Card Information */}
+            {/* ✅ Enhanced Card Information */}
             <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm">
               <CardHeader>
                 <CardTitle>Card Information</CardTitle>
@@ -429,8 +451,27 @@ END:VCARD`;
                     Theme
                   </span>
                   <Badge className="bg-brand-gradient text-white">
-                    {card.theme || 'modern'}
+                    {themeConfig.name}
                   </Badge>
+                </div>
+
+                {/* ✅ Show theme colors */}
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-600 dark:text-slate-400">
+                    Colors
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <div 
+                      className="w-4 h-4 rounded border-2 border-white shadow-sm" 
+                      style={{ backgroundColor: themeConfig.colors[0] }}
+                      title="Primary Color"
+                    />
+                    <div 
+                      className="w-4 h-4 rounded border-2 border-white shadow-sm" 
+                      style={{ backgroundColor: themeConfig.colors[1] }}
+                      title="Secondary Color"
+                    />
+                  </div>
                 </div>
 
                 <div className="flex justify-between items-center">
