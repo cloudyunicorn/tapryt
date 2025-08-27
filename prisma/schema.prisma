@@ -54,9 +54,6 @@ model Card {
   owner          User        @relation(fields: [ownerId], references: [id])
   socialLinks    SocialLink[]
   analytics      CardAnalytics[]
-
-  lastContactedAt String?
-  lastContactedBy String?
 }
 
 model SocialLink {

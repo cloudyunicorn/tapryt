@@ -77,8 +77,6 @@ export function CardViewer({ card, isOwner, user }: CardViewerProps) {
   const [showQR, setShowQR] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  console.log(card);
-
   // ✅ Get theme configuration from design system
   const themeConfig = getThemeById(card.theme || DESIGN_DEFAULTS.theme) || getThemeById(DESIGN_DEFAULTS.theme)!;
   const fontConfig = getFontById(DESIGN_DEFAULTS.fontFamily);
