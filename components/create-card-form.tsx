@@ -63,7 +63,6 @@ export function CreateCardForm() {
 
   // Handle ALL state changes (both form and design)
   const handleInputChange = (field: string, value: string | boolean | number) => {
-    console.log('✅ State update only:', field, value);
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -72,7 +71,6 @@ export function CreateCardForm() {
 
   // Handle form submission ONLY
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log('🚨 Form submitted - Creating card in database');
     e.preventDefault();
 
     startTransition(async () => {

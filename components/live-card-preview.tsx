@@ -97,50 +97,65 @@ export function LiveCardPreview({ formData, className = "" }: LiveCardPreviewPro
     shadowIntensity: formData.shadowIntensity || DESIGN_DEFAULTS.shadowIntensity,
   };
 
-  // ✅ WORKING: Create explicit gradient and colors
+  // ✅ FIXED: Proper gradient direction conversion
+  const getGradientDirection = (direction: string): string => {
+    const directionMap: { [key: string]: string } = {
+      'to-r': 'to right',
+      'to-l': 'to left',
+      'to-t': 'to top',
+      'to-b': 'to bottom',
+      'to-br': 'to bottom right',
+      'to-bl': 'to bottom left',
+      'to-tr': 'to top right',
+      'to-tl': 'to top left'
+    };
+    return directionMap[direction] || 'to right';
+  };
+
+  // Extract colors and direction
   const primaryColor = formData.primaryColor || themeConfig.colors[0];
   const secondaryColor = formData.secondaryColor || themeConfig.colors[1];
-  const gradientDirection = formData.gradientDirection || 'to-r';
+  const gradientDirection = getGradientDirection(formData.gradientDirection || 'to-r');
   
-  // Convert Tailwind gradient direction to CSS
-  const cssGradientDirection = gradientDirection.replace('to-', 'to ');
+  // ✅ FIXED: Create proper gradient background
+  let backgroundImages: string[] = [];
   
-  // Build background layers
-  let backgroundImage = `linear-gradient(${cssGradientDirection}, ${primaryColor}, ${secondaryColor})`;
-  
-  // Add pattern overlay if selected
+  // Add pattern first (if selected)
   if (formData.backgroundPattern && formData.backgroundPattern !== 'none' && patternConfig?.cssProperties.backgroundImage) {
-    backgroundImage = `${patternConfig.cssProperties.backgroundImage}, ${backgroundImage}`;
+    backgroundImages.push(patternConfig.cssProperties.backgroundImage as string);
   }
+  
+  // Add gradient (always)
+  backgroundImages.push(`linear-gradient(${gradientDirection}, ${primaryColor}, ${secondaryColor})`);
 
-  // ✅ SIMPLE: Create working card styles
+  // ✅ WORKING: Create comprehensive card styles
   const cardStyles: React.CSSProperties = {
-    backgroundColor: primaryColor, // Fallback solid color
-    backgroundImage: backgroundImage, // Gradient + patterns
+    // Background properties
+    backgroundColor: primaryColor, // Fallback
+    backgroundImage: backgroundImages.join(', '), // Layer patterns over gradient
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    backgroundSize: 'cover',
+    
+    // Border properties
     borderRadius: `${formData.borderRadius || DESIGN_DEFAULTS.borderRadius}px`,
     borderWidth: `${formData.borderWidth || DESIGN_DEFAULTS.borderWidth}px`,
     borderColor: formData.borderColor || DESIGN_DEFAULTS.borderColor,
     borderStyle: (formData.borderWidth || 0) > 0 ? 'solid' : 'none',
+    
+    // Text properties
     color: formData.textColor || themeConfig.textColor,
     fontSize: `${previewData.fontSize}px`,
     fontFamily: fontConfig?.fontFamily || 'Inter, sans-serif',
+    
+    // Layout properties
     padding: '1.5rem',
     position: 'relative',
     overflow: 'hidden',
     transition: 'all 0.3s ease',
-    minHeight: '200px', // Ensure minimum height
+    minHeight: '200px',
     width: '100%',
   };
-
-  // Debug: Log what we're applying
-  console.log('🎨 Card styles applied:', {
-    backgroundColor: cardStyles.backgroundColor,
-    backgroundImage: cardStyles.backgroundImage,
-    primaryColor,
-    secondaryColor,
-    gradientDirection: cssGradientDirection,
-    theme: formData.theme
-  });
 
   return (
     <Card className={`bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm ${className}`}>
@@ -245,7 +260,7 @@ export function LiveCardPreview({ formData, className = "" }: LiveCardPreviewPro
           </div>
         </div>
         
-        {/* Design info */}
+        {/* Design info with gradient preview */}
         <div className="mt-4 p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
           <h4 className="text-xs font-semibold text-slate-600 dark:text-slate-300 mb-2">
             Current Design
@@ -256,8 +271,21 @@ export function LiveCardPreview({ formData, className = "" }: LiveCardPreviewPro
             <div>Layout: <span className="font-mono">{layoutConfig?.name || 'Centered'}</span></div>
             <div>Shape: <span className="font-mono">{shapeConfig?.name || 'Rounded'}</span></div>
             <div>Size: <span className="font-mono">{previewData.fontSize}px</span></div>
-            <div>Shadow: <span className="font-mono">Level {previewData.shadowIntensity}</span></div>
+            <div>Gradient: <span className="font-mono">{gradientDirection}</span></div>
           </div>
+          
+          {/* Gradient preview strip */}
+          <div className="flex items-center gap-2 mt-2">
+            <div 
+              className="h-4 flex-1 rounded border border-white/30" 
+              style={{ 
+                backgroundImage: `linear-gradient(${gradientDirection}, ${primaryColor}, ${secondaryColor})` 
+              }}
+              title="Current Gradient"
+            />
+            <span className="text-xs text-slate-500">Gradient Preview</span>
+          </div>
+          
           <div className="flex items-center gap-2 mt-2">
             <div 
               className="w-4 h-4 rounded border border-white/30" 
