@@ -94,8 +94,9 @@ export async function createCard(formData: FormData): Promise<ActionResult> {
       });
     }
 
-    // Extract form data
+    // ✅ FIXED: Extract ALL form data including design properties
     const cardData = {
+      // Basic information
       title: formData.get('title') as string,
       fullName: formData.get('fullName') as string,
       jobTitle: (formData.get('jobTitle') as string) || undefined,
@@ -105,8 +106,24 @@ export async function createCard(formData: FormData): Promise<ActionResult> {
       website: (formData.get('website') as string) || undefined,
       address: (formData.get('address') as string) || undefined,
       bio: (formData.get('bio') as string) || undefined,
-      theme: (formData.get('theme') as string) || 'modern',
       isPublic: formData.get('isPublic') !== 'false',
+
+      // ✅ ADDED: Design properties
+      theme: (formData.get('theme') as string) || 'modern',
+      primaryColor: (formData.get('primaryColor') as string) || '#3B82F6',
+      secondaryColor: (formData.get('secondaryColor') as string) || '#8B5CF6',
+      backgroundColor: (formData.get('backgroundColor') as string) || '#FFFFFF',
+      textColor: (formData.get('textColor') as string) || '#1F2937',
+      fontFamily: (formData.get('fontFamily') as string) || 'inter',
+      fontSize: parseInt((formData.get('fontSize') as string) || '16'),
+      borderRadius: parseInt((formData.get('borderRadius') as string) || '12'),
+      borderWidth: parseInt((formData.get('borderWidth') as string) || '0'),
+      borderColor: (formData.get('borderColor') as string) || '#E5E7EB',
+      shadowIntensity: parseInt((formData.get('shadowIntensity') as string) || '3'),
+      backgroundPattern: (formData.get('backgroundPattern') as string) || 'none',
+      gradientDirection: (formData.get('gradientDirection') as string) || 'to-r',
+      cardShape: (formData.get('cardShape') as string) || 'rounded',
+      layout: (formData.get('layout') as string) || 'centered',
     };
 
     // Validate required fields
@@ -134,8 +151,8 @@ export async function createCard(formData: FormData): Promise<ActionResult> {
 
     // Generate QR code
     const qrCodeData = await generateStyledQRCode(cardUrl, {
-      foreground: '#3B82F6', // Brand blue
-      background: '#FFFFFF',
+      foreground: cardData.primaryColor, // Use user's primary color
+      background: cardData.backgroundColor, // Use user's background color
       size: 300,
     });
 
@@ -156,11 +173,12 @@ export async function createCard(formData: FormData): Promise<ActionResult> {
       }
     });
 
-    // Create card with social links in a transaction - WITH CORRECT TYPING
+    // Create card with social links in a transaction - WITH ALL DESIGN FIELDS
     const result = await prisma.$transaction(async (tx: PrismaTransaction) => {
-      // Create the card
+      // Create the card with ALL fields including design properties
       const card = await tx.card.create({
         data: {
+          // Basic information
           title: cardData.title,
           fullName: cardData.fullName,
           jobTitle: cardData.jobTitle,
@@ -170,12 +188,28 @@ export async function createCard(formData: FormData): Promise<ActionResult> {
           website: cardData.website,
           address: cardData.address,
           bio: cardData.bio,
-          theme: cardData.theme,
           isPublic: cardData.isPublic,
           slug: slug,
-          qrCodeUrl: cardUrl, // Store the URL the QR code points to
-          qrCodeData: qrCodeData, // Store the QR code image data
+          qrCodeUrl: cardUrl,
+          qrCodeData: qrCodeData,
           ownerId: user.id,
+
+          // ✅ ADDED: All design properties
+          theme: cardData.theme,
+          primaryColor: cardData.primaryColor,
+          secondaryColor: cardData.secondaryColor,
+          backgroundColor: cardData.backgroundColor,
+          textColor: cardData.textColor,
+          fontFamily: cardData.fontFamily,
+          fontSize: cardData.fontSize,
+          borderRadius: cardData.borderRadius,
+          borderWidth: cardData.borderWidth,
+          borderColor: cardData.borderColor,
+          shadowIntensity: cardData.shadowIntensity,
+          backgroundPattern: cardData.backgroundPattern,
+          gradientDirection: cardData.gradientDirection,
+          cardShape: cardData.cardShape,
+          layout: cardData.layout,
         },
       });
 
@@ -220,6 +254,7 @@ export async function createCard(formData: FormData): Promise<ActionResult> {
     };
   }
 }
+
 
 // Add function to regenerate QR code if needed
 export async function regenerateQRCode(cardId: string): Promise<ActionResult> {
@@ -430,166 +465,86 @@ export async function getCardAnalytics(cardId: string): Promise<ActionResult> {
 }
 
 // Add function to update card
-export async function updateCard(
-  cardId: string,
-  formData: FormData
-): Promise<ActionResult> {
+// In your card.actions.ts file, update the updateCard function
+export async function updateCard(slug: string, formData: FormData): Promise<ActionResult> {
   try {
     const supabase = await createClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return {
-        success: false,
-        error: 'Authentication required',
-      };
+      return { success: false, error: 'Authentication required' };
     }
 
-    // Get the existing card
-    const existingCard = await prisma.card.findUnique({
-      where: { id: cardId },
-      include: { socialLinks: true },
-    });
-
-    if (!existingCard || existingCard.ownerId !== user.id) {
-      return {
-        success: false,
-        error: 'Card not found or access denied',
-      };
-    }
-
-    // Extract form data
+    // ✅ Use Prisma instead of mixed Supabase queries
     const cardData = {
       title: formData.get('title') as string,
       fullName: formData.get('fullName') as string,
-      jobTitle: (formData.get('jobTitle') as string) || undefined,
-      company: (formData.get('company') as string) || undefined,
-      phone: (formData.get('phone') as string) || undefined,
-      email: (formData.get('email') as string) || undefined,
-      website: (formData.get('website') as string) || undefined,
-      address: (formData.get('address') as string) || undefined,
-      bio: (formData.get('bio') as string) || undefined,
-      theme: (formData.get('theme') as string) || 'modern',
-      isPublic: formData.get('isPublic') !== 'false',
+      jobTitle: formData.get('jobTitle') as string || undefined,
+      company: formData.get('company') as string || undefined,
+      email: formData.get('email') as string || undefined,
+      phone: formData.get('phone') as string || undefined,
+      website: formData.get('website') as string || undefined,
+      address: formData.get('address') as string || undefined,
+      bio: formData.get('bio') as string || undefined,
+      isPublic: formData.get('isPublic') === 'true',
+      theme: formData.get('theme') as string,
+      // Add other design properties as needed
     };
 
-    // Validate required fields
-    if (!cardData.title?.trim()) {
-      return {
-        success: false,
-        error: 'Card title is required',
-      };
-    }
-
-    if (!cardData.fullName?.trim()) {
-      return {
-        success: false,
-        error: 'Full name is required',
-      };
-    }
-
-    // Generate new slug if title changed
-    let slug = existingCard.slug;
-    if (cardData.title !== existingCard.title) {
-      slug = await generateUniqueSlug();
-    }
-
-    // Generate new QR code if slug changed
-    let qrCodeData = existingCard.qrCodeData;
-    let qrCodeUrl = existingCard.qrCodeUrl;
-    if (slug !== existingCard.slug) {
-      qrCodeUrl = `${
-        process.env.NEXT_PUBLIC_APP_URL || 'https://tapryt.com'
-      }/cards/${slug}`;
-      qrCodeData = await generateStyledQRCode(qrCodeUrl, {
-        foreground: '#3B82F6',
-        background: '#FFFFFF',
-        size: 300,
-      });
-    }
-
     // Extract social links
-    const socialLinks: { type: string; url: string }[] = [];
-    const socialTypes = [
-      'linkedin',
-      'twitter',
-      'instagram',
-      'facebook',
-      'github',
-    ];
+    const socialLinks = [
+      { type: 'linkedin', url: formData.get('linkedin') as string },
+      { type: 'twitter', url: formData.get('twitter') as string },
+      { type: 'instagram', url: formData.get('instagram') as string },
+      { type: 'facebook', url: formData.get('facebook') as string },
+      { type: 'github', url: formData.get('github') as string },
+    ].filter(link => link.url?.trim());
 
-    socialTypes.forEach((type) => {
-      const url = formData.get(type) as string;
-      if (url?.trim()) {
-        socialLinks.push({ type, url: url.trim() });
-      }
-    });
-
-    // Update card with social links in a transaction
+    // ✅ Update card using Prisma transaction
     const result = await prisma.$transaction(async (tx: PrismaTransaction) => {
       // Update the card
-      const card = await tx.card.update({
-        where: { id: cardId },
-        data: {
-          title: cardData.title,
-          fullName: cardData.fullName,
-          jobTitle: cardData.jobTitle,
-          company: cardData.company,
-          phone: cardData.phone,
-          email: cardData.email,
-          website: cardData.website,
-          address: cardData.address,
-          bio: cardData.bio,
-          theme: cardData.theme,
-          isPublic: cardData.isPublic,
+      const updatedCard = await tx.card.update({
+        where: { 
           slug: slug,
-          qrCodeUrl: qrCodeUrl,
-          qrCodeData: qrCodeData,
+          ownerId: user.id, // Ensure ownership
+        },
+        data: {
+          ...cardData,
+          updatedAt: new Date(),
         },
       });
 
       // Delete existing social links
       await tx.socialLink.deleteMany({
-        where: { cardId: cardId },
+        where: { cardId: updatedCard.id },
       });
 
-      // Create new social links if any
+      // Create new social links
       if (socialLinks.length > 0) {
         await tx.socialLink.createMany({
-          data: socialLinks.map((link) => ({
+          data: socialLinks.map(link => ({
+            cardId: updatedCard.id,
             type: link.type,
             url: link.url,
-            cardId: card.id,
           })),
         });
       }
 
-      return card;
+      return updatedCard;
     });
 
-    // Revalidate relevant pages
-    revalidatePath('/dashboard');
-    revalidatePath('/cards');
+    // Revalidate pages
     revalidatePath(`/cards/${slug}`);
+    revalidatePath(`/cards/${slug}/edit`);
+    revalidatePath('/cards');
 
-    return {
-      success: true,
-      data: {
-        cardId: result.id,
-        slug: result.slug,
-      },
-    };
+    return { success: true, data: result };
   } catch (error) {
     console.error('Error updating card:', error);
-    return {
-      success: false,
-      error: 'Failed to update card. Please try again.',
-    };
+    return { success: false, error: 'Failed to update card' };
   }
 }
+
 
 // Add function to delete card
 export async function deleteCard(cardId: string): Promise<ActionResult> {

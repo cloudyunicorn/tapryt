@@ -22,6 +22,7 @@ import {
   SparklesIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
+import { Header } from '@/components/header'; // ✅ Import the separated header
 
 const supabase = createClient();
 
@@ -113,11 +114,6 @@ export default function DashboardPage() {
     );
   }
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/auth/login';
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-800">
       {/* Background decoration */}
@@ -127,49 +123,8 @@ export default function DashboardPage() {
       </div>
 
       <div className="relative z-10">
-        {/* Header */}
-        <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Link href="/" className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-brand-gradient rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">TR</span>
-                  </div>
-                  <span className="text-xl font-bold text-brand-gradient">
-                    TapRyt
-                  </span>
-                </Link>
-                <Badge
-                  variant="secondary"
-                  className="bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300"
-                >
-                  Pro Plan
-                </Badge>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">
-                    {user.user_metadata?.name ||
-                      user.email?.split('@')[0] ||
-                      'User'}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {user.email}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={handleSignOut}
-                  className="border-slate-300 dark:border-slate-600"
-                >
-                  Sign Out
-                </Button>
-              </div>
-            </div>
-          </div>
-        </header>
+        {/* ✅ Use the separated Header component */}
+        <Header user={user} />
 
         <main className="max-w-7xl mx-auto px-6 py-8">
           {/* Welcome Section */}
@@ -359,15 +314,19 @@ export default function DashboardPage() {
                       and professional information.
                     </p>
                     <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="bg-brand-gradient hover:opacity-90"
-                      >
-                        Edit Card
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        Preview
-                      </Button>
+                      <Link href="/create-card">
+                        <Button
+                          size="sm"
+                          className="bg-brand-gradient hover:opacity-90"
+                        >
+                          Edit Card
+                        </Button>
+                      </Link>
+                      <Link href="/cards">
+                        <Button size="sm" variant="outline">
+                          Preview
+                        </Button>
+                      </Link>
                     </div>
                   </CardContent>
                 </Card>
@@ -503,12 +462,14 @@ export default function DashboardPage() {
                     Add a professional headshot to your digital card to increase
                     engagement by up to 40%!
                   </p>
-                  <Button
-                    size="sm"
-                    className="bg-brand-gradient hover:opacity-90"
-                  >
-                    Add Photo
-                  </Button>
+                  <Link href="/create-card">
+                    <Button
+                      size="sm"
+                      className="bg-brand-gradient hover:opacity-90"
+                    >
+                      Add Photo
+                    </Button>
+                  </Link>
                 </CardContent>
               </Card>
             </div>

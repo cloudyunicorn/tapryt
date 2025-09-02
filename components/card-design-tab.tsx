@@ -46,7 +46,6 @@ export function CardDesignTab({ designData, onDesignChange }: CardDesignTabProps
   const applyTheme = (e: React.MouseEvent, theme: ThemeConfig) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('🎨 Applying theme:', theme.id);
     onDesignChange('theme', theme.id);
     onDesignChange('primaryColor', theme.colors[0]);
     onDesignChange('secondaryColor', theme.colors[1]);

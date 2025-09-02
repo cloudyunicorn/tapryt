@@ -2,6 +2,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { CreateCardForm } from "@/components/create-card-form";
+import { Header } from "@/components/header";
 
 export default async function CreateCardPage() {
   // Check authentication
@@ -18,6 +19,8 @@ export default async function CreateCardPage() {
         <div className="absolute top-20 left-10 w-72 h-72 bg-brand-blue/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-20 right-10 w-72 h-72 bg-brand-purple/10 rounded-full blur-3xl"></div>
       </div>
+
+      <Header user={user} />
 
       <div className="relative z-10">
         <CreateCardForm />

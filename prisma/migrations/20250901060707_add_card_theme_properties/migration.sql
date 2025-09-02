@@ -1,0 +1,15 @@
+-- AlterTable
+ALTER TABLE "public"."Card" ADD COLUMN     "backgroundColor" TEXT DEFAULT '#FFFFFF',
+ADD COLUMN     "backgroundPattern" TEXT DEFAULT 'none',
+ADD COLUMN     "borderColor" TEXT DEFAULT '#E5E7EB',
+ADD COLUMN     "borderRadius" INTEGER DEFAULT 12,
+ADD COLUMN     "borderWidth" INTEGER DEFAULT 0,
+ADD COLUMN     "cardShape" TEXT DEFAULT 'rounded',
+ADD COLUMN     "fontFamily" TEXT DEFAULT 'inter',
+ADD COLUMN     "fontSize" INTEGER DEFAULT 16,
+ADD COLUMN     "gradientDirection" TEXT DEFAULT 'to-r',
+ADD COLUMN     "layout" TEXT DEFAULT 'centered',
+ADD COLUMN     "primaryColor" TEXT DEFAULT '#3B82F6',
+ADD COLUMN     "secondaryColor" TEXT DEFAULT '#8B5CF6',
+ADD COLUMN     "shadowIntensity" INTEGER DEFAULT 3,
+ADD COLUMN     "textColor" TEXT DEFAULT '#1F2937';

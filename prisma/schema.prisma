@@ -10,59 +10,73 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
 }
 
 model User {
-  id             String      @id @db.Uuid // Supabase Auth UUID
-  name           String?
-  email          String      @unique
-  passwordHash   String?     // if email/password auth (optional for OAuth)
-  image          String?     // profile picture
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id           String   @id @db.Uuid // Supabase Auth UUID
+  name         String?
+  email        String   @unique
+  passwordHash String? // if email/password auth (optional for OAuth)
+  image        String? // profile picture
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // Relations
-  cards          Card[]
-  subscriptions  Subscription[]
+  cards         Card[]
+  subscriptions Subscription[]
 }
 
 model Card {
-  id             String      @id @default(cuid())
-  title          String
-  fullName       String
-  jobTitle       String?
-  company        String?
-  phone          String?
-  email          String?
-  website        String?
-  address        String?
-  bio            String?
-  profileImage   String?     // Supabase storage URL
-  qrCodeUrl      String?
-  qrCodeData     String?     // Store the QR code data URL
-  slug           String      @unique
-  theme          String?
-  isPublic       Boolean     @default(true)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
+  id                String   @id @default(cuid())
+  title             String
+  fullName          String
+  jobTitle          String?
+  company           String?
+  phone             String?
+  email             String?
+  website           String?
+  address           String?
+  bio               String?
+  profileImage      String? // Supabase storage URL
+  qrCodeUrl         String?
+  qrCodeData        String? // Store the QR code data URL
+  slug              String   @unique
+  theme             String?
+  primaryColor      String?  @default("#3B82F6")
+  secondaryColor    String?  @default("#8B5CF6")
+  backgroundColor   String?  @default("#FFFFFF")
+  textColor         String?  @default("#1F2937")
+  fontFamily        String?  @default("inter")
+  fontSize          Int?     @default(16)
+  borderRadius      Int?     @default(12)
+  borderWidth       Int?     @default(0)
+  borderColor       String?  @default("#E5E7EB")
+  shadowIntensity   Int?     @default(3)
+  backgroundPattern String?  @default("none")
+  gradientDirection String?  @default("to-r")
+  cardShape         String?  @default("rounded")
+  layout            String?  @default("centered")
+  isPublic          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Relations
-  ownerId        String      @db.Uuid
-  owner          User        @relation(fields: [ownerId], references: [id])
-  socialLinks    SocialLink[]
-  analytics      CardAnalytics[]
+  ownerId     String          @db.Uuid
+  owner       User            @relation(fields: [ownerId], references: [id])
+  socialLinks SocialLink[]
+  analytics   CardAnalytics[]
 }
 
 model SocialLink {
-  id       String @id @default(cuid())
-  type     String
-  url      String
+  id   String @id @default(cuid())
+  type String
+  url  String
 
-  cardId   String
-  card     Card   @relation(fields: [cardId], references: [id])
+  cardId String
+  card   Card   @relation(fields: [cardId], references: [id])
 }
 
 model CardAnalytics {
@@ -76,13 +90,13 @@ model CardAnalytics {
 }
 
 model Subscription {
-  id              String    @id @default(cuid())
-  userId          String    @db.Uuid
-  user            User      @relation(fields: [userId], references: [id])
-  plan            String
-  status          String
-  startDate       DateTime  @default(now())
-  endDate         DateTime?
-  razorpayId      String?
-  createdAt       DateTime  @default(now())
+  id         String    @id @default(cuid())
+  userId     String    @db.Uuid
+  user       User      @relation(fields: [userId], references: [id])
+  plan       String
+  status     String
+  startDate  DateTime  @default(now())
+  endDate    DateTime?
+  razorpayId String?
+  createdAt  DateTime  @default(now())
 }

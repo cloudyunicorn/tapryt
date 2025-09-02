@@ -189,17 +189,7 @@ END:VCARD`;
 
       <div className="relative z-10 max-w-6xl mx-auto p-6 space-y-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <Link href="/cards">
-            <Button
-              variant="outline"
-              className="flex items-center gap-2 hover:bg-primary/5"
-            >
-              <ArrowLeftIcon className="w-4 h-4" />
-              Back to My Cards
-            </Button>
-          </Link>
-
+        <div className="flex items-center justify-end">
           {isOwner && (
             <div className="flex items-center gap-2">
               <Button

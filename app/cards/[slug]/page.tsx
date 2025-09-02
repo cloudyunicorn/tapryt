@@ -1,7 +1,8 @@
-import { createClient } from "@/lib/supabase/server";
-import { getCardBySlug } from "@/lib/actions/card.actions";
-import { notFound } from "next/navigation";
-import { CardViewer } from "@/components/card-viewer";
+import { createClient } from '@/lib/supabase/server';
+import { getCardBySlug } from '@/lib/actions/card.actions';
+import { notFound } from 'next/navigation';
+import { CardViewer } from '@/components/card-viewer';
+import { Header } from "@/components/header";
 
 interface PageProps {
   params: Promise<{
@@ -13,7 +14,7 @@ export async function generateMetadata({ params }: PageProps) {
   // AWAIT params before accessing its properties
   const { slug } = await params;
   const cardResult = await getCardBySlug(slug, false); // Don't track view for metadata
-  
+
   if (!cardResult.success || !cardResult.data) {
     return {
       title: 'Card Not Found - TapRyt',
@@ -25,10 +26,20 @@ export async function generateMetadata({ params }: PageProps) {
 
   return {
     title: `${card.fullName} - Digital Business Card | TapRyt`,
-    description: card.bio || `View ${card.fullName}'s digital business card. ${card.jobTitle ? `${card.jobTitle} at ${card.company || 'their company'}.` : ''}`,
+    description:
+      card.bio ||
+      `View ${card.fullName}'s digital business card. ${
+        card.jobTitle
+          ? `${card.jobTitle} at ${card.company || 'their company'}.`
+          : ''
+      }`,
     openGraph: {
       title: `${card.fullName}'s Digital Business Card`,
-      description: card.bio || `Connect with ${card.fullName}${card.jobTitle ? `, ${card.jobTitle}` : ''}`,
+      description:
+        card.bio ||
+        `Connect with ${card.fullName}${
+          card.jobTitle ? `, ${card.jobTitle}` : ''
+        }`,
       type: 'profile',
       url: `${process.env.NEXT_PUBLIC_APP_URL}/cards/${card.slug}`,
       images: card.profileImage ? [card.profileImage] : undefined,
@@ -45,16 +56,19 @@ export async function generateMetadata({ params }: PageProps) {
 export default async function CardViewPage({ params }: PageProps) {
   // AWAIT params before accessing its properties
   const { slug } = await params;
-  
+
   // Create Supabase client (works for both authenticated and anonymous users)
   const supabase = await createClient();
-  
+
   // Get user information (will be null for anonymous users)
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
+
   // Get the card - this should work for anonymous users viewing public cards
   const cardResult = await getCardBySlug(slug, true);
-  
+
   if (!cardResult.success || !cardResult.data) {
     notFound();
   }
@@ -69,5 +83,10 @@ export default async function CardViewPage({ params }: PageProps) {
     notFound();
   }
 
-  return <CardViewer card={card} isOwner={isOwner} user={user} />;
+  return (
+    <div>
+      <Header user={user} />
+      <CardViewer card={card} isOwner={isOwner} user={user} />
+    </div>
+  );
 }
