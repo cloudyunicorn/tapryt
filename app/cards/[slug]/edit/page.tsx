@@ -38,8 +38,6 @@ export default async function EditCardPage({ params }: EditCardPageProps) {
     redirect('/cards');
   }
 
-  console.log(card)
-
   // ✅ Prepare complete form data with saved design properties
   const initialFormData = {
     // Basic info
@@ -74,6 +72,8 @@ export default async function EditCardPage({ params }: EditCardPageProps) {
 
     // Social links
     socialLinks: card.socialLinks || [],
+
+    slug: slug
   };
 
   return (

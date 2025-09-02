@@ -468,6 +468,12 @@ export async function getCardAnalytics(cardId: string): Promise<ActionResult> {
 // In your card.actions.ts file, update the updateCard function
 export async function updateCard(slug: string, formData: FormData): Promise<ActionResult> {
   try {
+    if (!slug) {
+      return {
+        success: false,
+        error: 'Card slug is required',
+      };
+    }
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
