@@ -481,20 +481,36 @@ export async function updateCard(slug: string, formData: FormData): Promise<Acti
       return { success: false, error: 'Authentication required' };
     }
 
-    // ✅ Use Prisma instead of mixed Supabase queries
+    // ✅ Extract ALL form data including design properties
     const cardData = {
+      // Basic information
       title: formData.get('title') as string,
       fullName: formData.get('fullName') as string,
-      jobTitle: formData.get('jobTitle') as string || undefined,
-      company: formData.get('company') as string || undefined,
-      email: formData.get('email') as string || undefined,
-      phone: formData.get('phone') as string || undefined,
-      website: formData.get('website') as string || undefined,
-      address: formData.get('address') as string || undefined,
-      bio: formData.get('bio') as string || undefined,
+      jobTitle: (formData.get('jobTitle') as string) || undefined,
+      company: (formData.get('company') as string) || undefined,
+      phone: (formData.get('phone') as string) || undefined,
+      email: (formData.get('email') as string) || undefined,
+      website: (formData.get('website') as string) || undefined,
+      address: (formData.get('address') as string) || undefined,
+      bio: (formData.get('bio') as string) || undefined,
       isPublic: formData.get('isPublic') === 'true',
-      theme: formData.get('theme') as string,
-      // Add other design properties as needed
+
+      // ✅ FIXED: All design properties
+      theme: (formData.get('theme') as string) || 'modern',
+      primaryColor: (formData.get('primaryColor') as string) || '#3B82F6',
+      secondaryColor: (formData.get('secondaryColor') as string) || '#8B5CF6',
+      backgroundColor: (formData.get('backgroundColor') as string) || '#FFFFFF',
+      textColor: (formData.get('textColor') as string) || '#1F2937',
+      fontFamily: (formData.get('fontFamily') as string) || 'inter',
+      fontSize: parseInt((formData.get('fontSize') as string) || '16'),
+      borderRadius: parseInt((formData.get('borderRadius') as string) || '12'),
+      borderWidth: parseInt((formData.get('borderWidth') as string) || '0'),
+      borderColor: (formData.get('borderColor') as string) || '#E5E7EB',
+      shadowIntensity: parseInt((formData.get('shadowIntensity') as string) || '3'),
+      backgroundPattern: (formData.get('backgroundPattern') as string) || 'none',
+      gradientDirection: (formData.get('gradientDirection') as string) || 'to-r',
+      cardShape: (formData.get('cardShape') as string) || 'rounded',
+      layout: (formData.get('layout') as string) || 'centered',
     };
 
     // Extract social links
@@ -508,14 +524,42 @@ export async function updateCard(slug: string, formData: FormData): Promise<Acti
 
     // ✅ Update card using Prisma transaction
     const result = await prisma.$transaction(async (tx: PrismaTransaction) => {
-      // Update the card
+      // Update the card with ALL properties including design
       const updatedCard = await tx.card.update({
-        where: { 
+        where: {
           slug: slug,
           ownerId: user.id, // Ensure ownership
         },
         data: {
-          ...cardData,
+          // Basic information
+          title: cardData.title,
+          fullName: cardData.fullName,
+          jobTitle: cardData.jobTitle,
+          company: cardData.company,
+          phone: cardData.phone,
+          email: cardData.email,
+          website: cardData.website,
+          address: cardData.address,
+          bio: cardData.bio,
+          isPublic: cardData.isPublic,
+
+          // ✅ FIXED: All design properties
+          theme: cardData.theme,
+          primaryColor: cardData.primaryColor,
+          secondaryColor: cardData.secondaryColor,
+          backgroundColor: cardData.backgroundColor,
+          textColor: cardData.textColor,
+          fontFamily: cardData.fontFamily,
+          fontSize: cardData.fontSize,
+          borderRadius: cardData.borderRadius,
+          borderWidth: cardData.borderWidth,
+          borderColor: cardData.borderColor,
+          shadowIntensity: cardData.shadowIntensity,
+          backgroundPattern: cardData.backgroundPattern,
+          gradientDirection: cardData.gradientDirection,
+          cardShape: cardData.cardShape,
+          layout: cardData.layout,
+          
           updatedAt: new Date(),
         },
       });

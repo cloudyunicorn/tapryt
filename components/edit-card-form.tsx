@@ -34,6 +34,11 @@ export function EditCardForm({ card }: EditCardFormProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
+  // ✅ FIXED: Extract social links from socialLinks array
+  const getSocialLinkUrl = (type: string) => {
+    return card.socialLinks?.find((link: any) => link.type === type)?.url || '';
+  };
+
   // Consolidated form state with card data pre-populated
   const [formData, setFormData] = useState({
     // Basic info
@@ -47,11 +52,11 @@ export function EditCardForm({ card }: EditCardFormProps) {
     website: card.website || '',
     address: card.address || '',
     bio: card.bio || '',
-    linkedin: card.linkedin || '',
-    twitter: card.twitter || '',
-    instagram: card.instagram || '',
-    facebook: card.facebook || '',
-    github: card.github || '',
+    linkedin: getSocialLinkUrl('linkedin'),
+    twitter: getSocialLinkUrl('twitter'),
+    instagram: getSocialLinkUrl('instagram'),
+    facebook: getSocialLinkUrl('facebook'),
+    github: getSocialLinkUrl('github'),
     isPublic: card.isPublic ?? true,
 
     // Design properties
