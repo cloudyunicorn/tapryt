@@ -10,33 +10,14 @@ import { v4 as uuidv4 } from 'uuid';
 // Import the correct transaction type
 import type { PrismaClient } from '@prisma/client';
 
+// ✅ Import centralized types
+import { ActionResult } from '@/lib/types';
+
 // Create the correct transaction type
 type PrismaTransaction = Omit<
   PrismaClient,
   '$connect' | '$disconnect' | '$on' | '$transaction' | '$extends'
 >;
-
-export interface CardData {
-  title: string;
-  fullName: string;
-  jobTitle?: string;
-  company?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  address?: string;
-  bio?: string;
-  profileImage?: string;
-  theme?: string;
-  isPublic?: boolean;
-  socialLinks?: { type: string; url: string }[];
-}
-
-export interface ActionResult {
-  success: boolean;
-  error?: string;
-  data?: any;
-}
 
 // Generate unique slug for the card
 async function generateUniqueSlug(): Promise<string> {

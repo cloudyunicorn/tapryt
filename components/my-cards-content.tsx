@@ -6,10 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { 
-  PlusIcon, 
-  EyeIcon, 
-  ShareIcon, 
+import {
+  PlusIcon,
+  EyeIcon,
+  ShareIcon,
   PencilIcon,
   TrashIcon,
   MagnifyingGlassIcon,
@@ -29,24 +29,11 @@ import {
   DESIGN_DEFAULTS
 } from "@/lib/design-system";
 
-interface CardData {
-  id: string;
-  title: string;
-  fullName: string;
-  jobTitle?: string;
-  company?: string;
-  email?: string;
-  phone?: string;
-  slug: string;
-  theme?: string;
-  isPublic: boolean;
-  createdAt: string;
-  socialLinks?: Array<{ type: string; url: string }>;
-  _count?: { analytics: number };
-}
+// ✅ Import centralized types
+import { CardWithRelations } from "@/lib/types";
 
 interface MyCardsContentProps {
-  cards: CardData[];
+  cards: CardWithRelations[];
   user: any;
 }
 
@@ -167,7 +154,7 @@ export function MyCardsContent({ cards, user }: MyCardsContentProps) {
 }
 
 // ✅ Updated Individual Card Component with Design System
-function CardItem({ card }: { card: CardData }) {
+function CardItem({ card }: { card: CardWithRelations }) {
   const [copied, setCopied] = useState(false);
 
   // ✅ Get theme configuration from design system

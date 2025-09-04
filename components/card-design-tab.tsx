@@ -18,26 +18,11 @@ import {
   type ThemeConfig
 } from "@/lib/design-system";
 
-interface DesignData {
-  theme: string;
-  primaryColor: string;
-  secondaryColor: string;
-  backgroundColor: string;
-  textColor: string;
-  fontFamily: string;
-  fontSize: number;
-  borderRadius: number;
-  borderWidth: number;
-  borderColor: string;
-  shadowIntensity: number;
-  backgroundPattern: string;
-  gradientDirection: string;
-  cardShape: string;
-  layout: string;
-}
+// ✅ Import centralized types
+import { CardFormData } from "@/lib/types";
 
 interface CardDesignTabProps {
-  designData: DesignData;
+  designData: CardFormData;
   onDesignChange: (field: string, value: string | number) => void;
 }
 

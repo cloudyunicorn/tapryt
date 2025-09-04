@@ -14,29 +14,8 @@ import {
   DESIGN_DEFAULTS
 } from "@/lib/design-system";
 
-interface CardFormData {
-  title: string;
-  fullName: string;
-  jobTitle: string;
-  company: string;
-  email: string;
-  phone: string;
-  theme: string;
-  primaryColor?: string;
-  secondaryColor?: string;
-  backgroundColor?: string;
-  textColor?: string;
-  fontFamily?: string;
-  fontSize?: number;
-  borderRadius?: number;
-  borderWidth?: number;
-  borderColor?: string;
-  shadowIntensity?: number;
-  backgroundPattern?: string;
-  gradientDirection?: string;
-  cardShape?: string;
-  layout?: string;
-}
+// ✅ Import centralized types
+import { CardFormData } from "@/lib/types";
 
 interface LiveCardPreviewProps {
   formData: CardFormData;
@@ -79,7 +58,7 @@ export function LiveCardPreview({ formData, className = "" }: LiveCardPreviewPro
   }
 
   // Get design configurations
-  const themeConfig = getThemeById(formData.theme) || getThemeById(DESIGN_DEFAULTS.theme)!;
+  const themeConfig = getThemeById(formData.theme || DESIGN_DEFAULTS.theme)!;
   const fontConfig = getFontById(formData.fontFamily || DESIGN_DEFAULTS.fontFamily);
   const patternConfig = getPatternById(formData.backgroundPattern || DESIGN_DEFAULTS.backgroundPattern);
   const shapeConfig = getShapeById(formData.cardShape || DESIGN_DEFAULTS.cardShape);

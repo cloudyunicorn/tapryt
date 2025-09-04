@@ -31,44 +31,11 @@ import {
   DESIGN_DEFAULTS
 } from '@/lib/design-system';
 
-interface SocialLink {
-  id: string;
-  type: string;
-  url: string;
-}
-
-interface CardData {
-  id: string;
-  title: string;
-  fullName: string;
-  jobTitle?: string;
-  company?: string;
-  phone?: string;
-  email?: string;
-  website?: string;
-  address?: string;
-  bio?: string;
-  profileImage?: string;
-  qrCodeUrl?: string;
-  qrCodeData?: string;
-  slug: string;
-  theme?: string;
-  isPublic: boolean;
-  createdAt: string;
-  updatedAt: string;
-  ownerId: string;
-  socialLinks: SocialLink[];
-  owner: {
-    name: string | null;
-    image: string | null;
-  };
-  _count?: {
-    analytics: number;
-  };
-}
+// ✅ Import centralized types
+import { SocialLink, CardWithRelations } from '@/lib/types';
 
 interface CardViewerProps {
-  card: CardData;
+  card: CardWithRelations;
   isOwner: boolean;
   user?: any;
 }
