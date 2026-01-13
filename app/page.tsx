@@ -1,65 +1,173 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { Header } from "@/components/layout/Header";
+import { InputForm } from "@/components/generator/InputForm";
+import { toast } from "sonner";
+import { Copy, Bookmark, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
+import { Hero } from "@/components/landing/Hero";
+import { Features } from "@/components/landing/Features";
+import { Footer } from "@/components/landing/Footer";
+
+interface Idea {
+  hook: string;
+  angle: string;
+  cta: string;
+}
 
 export default function Home() {
+  const [ideas, setIdeas] = useState<Idea[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentNiche, setCurrentNiche] = useState("");
+  const [currentPlatform, setCurrentPlatform] = useState("");
+  const supabase = createClient();
+
+  const handleGenerate = async (niche: string, platform: string) => {
+    setIsLoading(true);
+    setCurrentNiche(niche);
+    setCurrentPlatform(platform);
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ niche, platform }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error("Please sign in first", {
+            action: {
+              label: "Sign In",
+              onClick: () => window.location.href = "/login"
+            }
+          });
+          return;
+        }
+        if (response.status === 403) {
+          toast.error("Daily limit reached", {
+            description: "Upgrade to Pro for unlimited ideas!"
+          });
+          return;
+        }
+        throw new Error(data.error || "Failed to generate ideas");
+      }
+
+      setIdeas(data.ideas);
+      // Scroll to results
+      setTimeout(() => {
+        document.getElementById('results')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+
+    } catch (error: any) {
+      toast.error(error.message || "Something went wrong", {
+        description: "Please try again later.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async (idea: Idea) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("Please sign in to save ideas");
+      return;
+    }
+
+    const { error } = await supabase.from('saved_ideas').insert({
+      user_id: user.id,
+      niche: currentNiche,
+      platform: currentPlatform,
+      hook: idea.hook,
+      angle: idea.angle,
+      cta: idea.cta
+    });
+
+    if (error) {
+      toast.error("Failed to save idea");
+      console.error(error);
+    } else {
+      toast.success("Idea saved to dashboard!");
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+    <div className="min-h-screen flex flex-col font-sans">
+      <Header />
+
+      <main className="flex-1">
+
+        {/* Hero Section */}
+        <Hero />
+
+        {/* Generator Section */}
+        <section id="generator" className="py-20 bg-background/30 container mx-auto px-4 md:px-6 flex flex-col items-center">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold tracking-tighter mb-4">Try the Magic</h2>
+            <p className="text-muted-foreground">Select a niche and let AI do the heavy lifting.</p>
+          </div>
+
+          <InputForm onGenerate={handleGenerate} isLoading={isLoading} />
+
+          {ideas.length > 0 && (
+            <div id="results" className="w-full max-w-4xl mt-12 grid gap-6 md:grid-cols-2 scroll-mt-24">
+              {ideas.map((idea, i) => (
+                <div key={i} className="relative p-6 rounded-xl border bg-card text-card-foreground shadow-sm group hover:shadow-md transition-all">
+                  <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleSave(idea)}
+                      title="Save Idea"
+                    >
+                      <Bookmark className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(
+                          `Hook: ${idea.hook}\nAngle: ${idea.angle}\nCTA: ${idea.cta}`
+                        );
+                        toast.success("Copied to clipboard!");
+                      }}
+                      title="Copy to Clipboard"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Hook</span>
+                      <p className="text-lg font-medium leading-relaxed">{idea.hook}</p>
+                    </div>
+                    <div>
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Angle</span>
+                      <p className="text-sm text-foreground/80">{idea.angle}</p>
+                    </div>
+                    <div className="bg-secondary/50 p-3 rounded-lg">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block mb-1">Call to Action</span>
+                      <p className="text-sm text-indigo-500 font-bold">{idea.cta}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Features Section */}
+        <Features />
+
       </main>
+
+      <Footer />
     </div>
   );
 }
