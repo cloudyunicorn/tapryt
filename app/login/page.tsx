@@ -13,6 +13,7 @@ export default function LoginPage() {
     const router = useRouter()
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
+    const [fullName, setFullName] = useState("")
     const [isLoading, setIsLoading] = useState(false)
     const [isSignUp, setIsSignUp] = useState(false)
     const supabase = createClient()
@@ -26,6 +27,11 @@ export default function LoginPage() {
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                        },
+                    },
                 })
                 if (error) throw error;
                 toast.success("Check your email to confirm sign up!")
@@ -58,6 +64,20 @@ export default function LoginPage() {
                     </p>
                 </div>
                 <form onSubmit={handleAuth} className="space-y-4">
+                    {isSignUp && (
+                        <div className="space-y-2">
+                            <Label htmlFor="fullName">Full Name</Label>
+                            <Input
+                                id="fullName"
+                                type="text"
+                                placeholder="John Doe"
+                                required
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                className="bg-background/50"
+                            />
+                        </div>
+                    )}
                     <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
                         <Input
