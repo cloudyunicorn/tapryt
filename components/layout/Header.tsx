@@ -63,7 +63,7 @@ export function Header() {
 
                     <Button
                         size="sm"
-                        className="bg-gradient-to-r from-pink-500 to-indigo-500 hover:from-pink-600 hover:to-indigo-600"
+                        variant="gradient"
                         onClick={() => setIsPricingOpen(true)}
                     >
                         Get Pro

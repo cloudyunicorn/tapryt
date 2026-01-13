@@ -122,7 +122,8 @@ export function PricingModal({ isOpen, onClose }: PricingModalProps) {
                 </div>
                 <DialogFooter>
                     <Button
-                        className="w-full bg-gradient-to-r from-pink-500 to-indigo-500"
+                        className="w-full"
+                        variant="gradient"
                         size="lg"
                         onClick={handlePayment}
                         disabled={isLoading}

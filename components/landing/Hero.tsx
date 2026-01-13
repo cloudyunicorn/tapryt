@@ -28,7 +28,7 @@ export function Hero() {
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full justify-center">
                     <Link href="/login">
-                        <Button size="lg" className="w-full sm:w-auto text-lg h-12 px-8 bg-gradient-to-r from-pink-500 to-indigo-500 hover:from-pink-600 hover:to-indigo-600 shadow-lg shadow-indigo-500/25">
+                        <Button size="lg" variant="gradient" className="w-full sm:w-auto text-lg h-12 px-8 shadow-lg shadow-indigo-500/25">
                             Start Generating Free
                             <ArrowRight className="ml-2 w-5 h-5" />
                         </Button>

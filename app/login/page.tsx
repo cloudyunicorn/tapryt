@@ -37,7 +37,7 @@ export default function LoginPage() {
                 if (error) throw error;
                 toast.success("Successfully logged in!")
                 router.refresh()
-                router.push("/")
+                router.push("/dashboard")
             }
         } catch (error: any) {
             toast.error(error.message)
@@ -81,7 +81,7 @@ export default function LoginPage() {
                             className="bg-background/50"
                         />
                     </div>
-                    <Button type="submit" className="w-full bg-gradient-to-r from-pink-500 to-indigo-500 hover:from-pink-600 hover:to-indigo-600 transition-all shadow-md">
+                    <Button type="submit" className="w-full" variant="gradient" disabled={isLoading}>
                         {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {isSignUp ? "Create Account" : "Sign In"}
                     </Button>

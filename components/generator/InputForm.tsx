@@ -82,7 +82,8 @@ export function InputForm({ onGenerate, isLoading }: InputFormProps) {
             </div>
 
             <Button
-                className="w-full bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 hover:opacity-90 transition-opacity"
+                className="w-full"
+                variant="gradient"
                 onClick={handleGenerate}
                 disabled={!niche || !platform || isLoading}
             >
