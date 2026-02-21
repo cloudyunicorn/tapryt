@@ -256,7 +256,13 @@ export default function WhatsAppChatGenerator() {
                     <div
                         ref={chatRef}
                         className={`w-full max-w-[400px] h-[700px] overflow-hidden flex flex-col relative ${theme === 'dark' ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#efeae2] text-[#111b21]'}`}
-                        style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}
+                        style={{
+                            fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                            backgroundImage: theme === 'dark' ? "url('/images/wa-bg-dark.jpg')" : "url('/images/wa-bg-light.png')",
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center',
+                            backgroundRepeat: 'no-repeat'
+                        }}
                     >
                         {/* Header */}
                         <div className={`text-white px-2 py-2 flex items-center gap-2 shadow-sm z-10 sticky top-0 ${theme === 'dark' ? 'bg-[#202c33]' : 'bg-[#075E54]'}`}>
