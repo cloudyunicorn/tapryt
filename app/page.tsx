@@ -102,6 +102,7 @@ const categories = [
       { name: "Word Counter", href: "/tools/word-counter", desc: "Count words & characters" },
       { name: "Color Converter", href: "/tools/color-converter", desc: "HEX, RGB, HSL conversion" },
       { name: "Lorem Ipsum", href: "/tools/lorem-ipsum", desc: "Generate placeholder text" },
+      { name: "Instagram Caption", href: "/tools/instagram-caption", desc: "Generate random captions" },
     ],
   },
   {
