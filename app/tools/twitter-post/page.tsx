@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { toPng } from "html-to-image";
 
 export default function TwitterPostGenerator() {
+    const [theme, setTheme] = useState<"light" | "dark">("light");
     const [name, setName] = useState("");
     const [username, setUsername] = useState("");
     const [verified, setVerified] = useState(true);
@@ -43,7 +44,7 @@ export default function TwitterPostGenerator() {
             const dataUrl = await toPng(postRef.current, {
                 cacheBust: true,
                 pixelRatio: 2,
-                backgroundColor: "#ffffff",
+                backgroundColor: theme === "dark" ? "#000000" : "#ffffff",
             });
             const a = document.createElement("a");
             a.href = dataUrl;
@@ -208,6 +209,24 @@ export default function TwitterPostGenerator() {
                         />
                     </div>
 
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Post Theme</label>
+                        <div className="flex bg-zinc-100 rounded-lg p-1 dark:bg-zinc-800">
+                            <button
+                                onClick={() => setTheme("light")}
+                                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${theme === "light" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
+                            >
+                                Light
+                            </button>
+                            <button
+                                onClick={() => setTheme("dark")}
+                                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${theme === "dark" ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-700" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
+                            >
+                                Dark
+                            </button>
+                        </div>
+                    </div>
+
                     <button
                         onClick={exportAsImage}
                         disabled={isExporting}
@@ -222,7 +241,7 @@ export default function TwitterPostGenerator() {
                     {/* Post Card */}
                     <div
                         ref={postRef}
-                        className="w-full max-w-[500px] bg-white text-zinc-900 border border-zinc-100 dark:border-zinc-200 overflow-hidden px-4 py-3"
+                        className={`w-full max-w-[500px] border overflow-hidden px-4 py-3 ${theme === 'dark' ? 'bg-black text-[#e7e9ea] border-[#2f3336]' : 'bg-white text-[#0f1419] border-zinc-100 dark:border-zinc-200'}`}
                         style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}
                     >
                         {/* Header */}
@@ -235,49 +254,49 @@ export default function TwitterPostGenerator() {
                                 />
                                 <div className="flex flex-col">
                                     <div className="flex items-center gap-1">
-                                        <span className="text-[15px] font-bold leading-none hover:underline cursor-pointer">{name || "Elon Musk"}</span>
+                                        <span className={`text-[15px] font-bold leading-none hover:underline cursor-pointer ${theme === 'dark' ? 'text-[#e7e9ea]' : 'text-[#0f1419]'}`}>{name || "Elon Musk"}</span>
                                         {verified && (
                                             <svg viewBox="0 0 24 24" className="h-[18px] w-[18px] text-[#1da1f2]" fill="currentColor">
                                                 <g><path d="M22.5 12.5c0-1.58-.875-2.95-2.148-3.6.154-.435.238-.905.238-1.4 0-2.21-1.71-3.998-3.918-3.998-.47 0-.92.084-1.336.25C14.818 2.415 13.51 1.5 12 1.5s-2.816.917-3.337 2.25c-.416-.165-.866-.25-1.336-.25-2.21 0-3.918 1.79-3.918 4 0 .495.084.965.238 1.4-1.273.65-2.148 2.02-2.148 3.6 0 1.52.81 2.84 2.008 3.52-.055.22-.08.45-.08.68 0 2.21 1.71 4 3.918 4 .47 0 .92-.086 1.336-.25.52 1.335 1.82 2.25 3.337 2.25s2.816-.915 3.337-2.25c.416.164.866.25 1.336.25 2.21 0 3.918-1.79 3.918-4 0-.23-.025-.46-.08-.68 1.198-.68 2.008-2 2.008-3.52zm-12.016 3.864l-3.36-3.36 1.415-1.415 1.944 1.944 5.35-5.35 1.415 1.415-6.764 6.766z" /></g>
                                             </svg>
                                         )}
                                     </div>
-                                    <span className="text-[15px] text-zinc-500 leading-tight mt-1">@{username || "elonmusk"}</span>
+                                    <span className={`text-[15px] leading-tight mt-1 ${theme === 'dark' ? 'text-[#71767b]' : 'text-[#536471]'}`}>@{username || "elonmusk"}</span>
                                 </div>
                             </div>
                             {/* 3 dots */}
-                            <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 text-zinc-500"><g><path d="M3 12c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm9 2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm7 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"></path></g></svg>
+                            <svg viewBox="0 0 24 24" aria-hidden="true" className={`h-5 w-5 ${theme === 'dark' ? 'text-[#71767b]' : 'text-[#536471]'}`} fill="currentColor"><g><path d="M3 12c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm9 2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm7 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"></path></g></svg>
                         </div>
 
                         {/* Content */}
-                        <div className="text-[15px] leading-normal text-[#0f1419] mb-3 whitespace-pre-wrap break-words" style={{ fontSize: '17px', lineHeight: '1.3125' }}>
+                        <div className={`text-[15px] leading-normal mb-3 whitespace-pre-wrap break-words ${theme === 'dark' ? 'text-[#e7e9ea]' : 'text-[#0f1419]'}`} style={{ fontSize: '17px', lineHeight: '1.3125' }}>
                             {tweetText || "Just bought another company."}
                         </div>
 
                         {/* Details */}
-                        <div className="flex items-center gap-1 text-[15px] text-zinc-500 mb-4 py-1">
+                        <div className={`flex items-center gap-1 text-[15px] mb-4 py-1 ${theme === 'dark' ? 'text-[#71767b]' : 'text-[#536471]'}`}>
                             <span>{time || "4:20 PM"}</span>
                             <span>·</span>
                             <span>{date || "Apr 20, 2026"}</span>
                             <span>·</span>
-                            <span className="font-bold text-[#0f1419]">{views || "69M"}</span>
+                            <span className={`font-bold ${theme === 'dark' ? 'text-[#e7e9ea]' : 'text-[#0f1419]'}`}>{views || "69M"}</span>
                             <span>Views</span>
                         </div>
 
-                        <div className="w-full h-px bg-zinc-200 mb-4" />
+                        <div className={`w-full h-px mb-4 ${theme === 'dark' ? 'bg-[#2f3336]' : 'bg-[#eff3f4]'}`} />
 
                         {/* Stats */}
-                        <div className="flex flex-wrap items-center gap-4 text-[15px] text-zinc-500 mb-4">
-                            <span className="flex items-center gap-1 hover:underline cursor-pointer"><span className="font-bold text-[#0f1419]">{retweets || "42K"}</span> Reposts</span>
-                            <span className="flex items-center gap-1 hover:underline cursor-pointer"><span className="font-bold text-[#0f1419]">{quotes || "12K"}</span> Quotes</span>
-                            <span className="flex items-center gap-1 hover:underline cursor-pointer"><span className="font-bold text-[#0f1419]">{likes || "1.2M"}</span> Likes</span>
-                            <span className="flex items-center gap-1 hover:underline cursor-pointer"><span className="font-bold text-[#0f1419]">{bookmarks || "10K"}</span> Bookmarks</span>
+                        <div className={`flex flex-wrap items-center gap-4 text-[15px] mb-4 ${theme === 'dark' ? 'text-[#71767b]' : 'text-[#536471]'}`}>
+                            <span className="flex items-center gap-1 hover:underline cursor-pointer"><span className={`font-bold ${theme === 'dark' ? 'text-[#e7e9ea]' : 'text-[#0f1419]'}`}>{retweets || "42K"}</span> Reposts</span>
+                            <span className="flex items-center gap-1 hover:underline cursor-pointer"><span className={`font-bold ${theme === 'dark' ? 'text-[#e7e9ea]' : 'text-[#0f1419]'}`}>{quotes || "12K"}</span> Quotes</span>
+                            <span className="flex items-center gap-1 hover:underline cursor-pointer"><span className={`font-bold ${theme === 'dark' ? 'text-[#e7e9ea]' : 'text-[#0f1419]'}`}>{likes || "1.2M"}</span> Likes</span>
+                            <span className="flex items-center gap-1 hover:underline cursor-pointer"><span className={`font-bold ${theme === 'dark' ? 'text-[#e7e9ea]' : 'text-[#0f1419]'}`}>{bookmarks || "10K"}</span> Bookmarks</span>
                         </div>
 
-                        <div className="w-full h-px bg-zinc-200 mb-4" />
+                        <div className={`w-full h-px mb-4 ${theme === 'dark' ? 'bg-[#2f3336]' : 'bg-[#eff3f4]'}`} />
 
                         {/* Action buttons */}
-                        <div className="flex items-center justify-around text-zinc-500 pb-1">
+                        <div className={`flex items-center justify-around pb-1 fill-current ${theme === 'dark' ? 'text-[#71767b]' : 'text-[#536471]'}`}>
                             {/* Reply */}
                             <svg viewBox="0 0 24 24" aria-hidden="true" className="h-[22.5px] w-[22.5px]"><g><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.96-1.607 5.68-4.196 7.11l-8.054 4.46v-3.69h-.067c-4.49.1-8.183-3.51-8.183-8.01zm8.005-6c-3.317 0-6.005 2.69-6.005 6 0 3.37 2.77 6.08 6.138 6.01l.351-.01h1.761v2.3l5.087-2.81c1.951-1.08 3.163-3.13 3.163-5.36 0-3.39-2.744-6.13-6.129-6.13H9.756z"></path></g></svg>
                             {/* Repost */}

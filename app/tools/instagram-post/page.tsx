@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { toPng } from "html-to-image";
 
 export default function InstagramPostGenerator() {
+    const [theme, setTheme] = useState<"light" | "dark">("light");
     const [username, setUsername] = useState("");
     const [location, setLocation] = useState("");
     const [verified, setVerified] = useState(false);
@@ -38,7 +39,7 @@ export default function InstagramPostGenerator() {
             const dataUrl = await toPng(postRef.current, {
                 cacheBust: true,
                 pixelRatio: 2,
-                backgroundColor: "#ffffff",
+                backgroundColor: theme === "dark" ? "#000000" : "#ffffff",
             });
             const a = document.createElement("a");
             a.href = dataUrl;
@@ -151,6 +152,24 @@ export default function InstagramPostGenerator() {
                         />
                     </div>
 
+                    <div>
+                        <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Post Theme</label>
+                        <div className="flex bg-zinc-100 rounded-lg p-1 dark:bg-zinc-800">
+                            <button
+                                onClick={() => setTheme("light")}
+                                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${theme === "light" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
+                            >
+                                Light
+                            </button>
+                            <button
+                                onClick={() => setTheme("dark")}
+                                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${theme === "dark" ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-700" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
+                            >
+                                Dark
+                            </button>
+                        </div>
+                    </div>
+
                     <button
                         onClick={exportAsImage}
                         disabled={isExporting}
@@ -165,13 +184,13 @@ export default function InstagramPostGenerator() {
                     {/* Post Card */}
                     <div
                         ref={postRef}
-                        className="w-full max-w-[400px] bg-white text-zinc-900 border border-zinc-200 overflow-hidden"
+                        className={`w-full max-w-[400px] border overflow-hidden ${theme === 'dark' ? 'bg-black text-zinc-50 border-zinc-800' : 'bg-white text-zinc-900 border-zinc-200'}`}
                         style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" }}
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-3">
                             <div className="flex items-center gap-3">
-                                <div className="h-8 w-8 rounded-full overflow-hidden bg-zinc-100 flex-shrink-0">
+                                <div className={`h-8 w-8 rounded-full overflow-hidden flex-shrink-0 ${theme === 'dark' ? 'bg-zinc-800' : 'bg-zinc-100'}`}>
                                     <img
                                         src={profilePic || defaultProfile}
                                         alt="Profile"
@@ -187,16 +206,16 @@ export default function InstagramPostGenerator() {
                                             </svg>
                                         )}
                                     </div>
-                                    <span className="text-[11px] text-zinc-500 leading-tight mt-0.5">{location || "Somewhere over the rainbow"}</span>
+                                    <span className={`text-[11px] leading-tight mt-0.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-zinc-500'}`}>{location || "Somewhere over the rainbow"}</span>
                                 </div>
                             </div>
-                            <svg className="h-5 w-5 text-zinc-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className={`h-5 w-5 ${theme === 'dark' ? 'text-zinc-50' : 'text-zinc-900'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z" />
                             </svg>
                         </div>
 
                         {/* Image */}
-                        <div className="w-full aspect-[4/5] bg-zinc-100 overflow-hidden flex items-center justify-center">
+                        <div className={`w-full aspect-[4/5] overflow-hidden flex items-center justify-center ${theme === 'dark' ? 'bg-zinc-900' : 'bg-zinc-100'}`}>
                             <img
                                 src={postPic || defaultPost}
                                 alt="Post"
@@ -207,32 +226,32 @@ export default function InstagramPostGenerator() {
                         {/* Footie */}
                         <div className="p-3">
                             {/* Actions */}
-                            <div className="flex items-center justify-between mb-2">
+                            <div className={`flex items-center justify-between mb-2 ${theme === 'dark' ? 'text-zinc-50' : 'text-zinc-900'}`}>
                                 <div className="flex gap-4">
-                                    <svg className="h-6 w-6 text-zinc-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                     </svg>
-                                    <svg aria-label="Comment" className="h-6 w-6 text-zinc-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg aria-label="Comment" className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                                     </svg>
-                                    <svg aria-label="Share Post" className="h-6 w-6 text-zinc-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg aria-label="Share Post" className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                                     </svg>
                                 </div>
                                 <div>
-                                    <svg aria-label="Save" className="h-6 w-6 text-zinc-900" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg aria-label="Save" className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
                                     </svg>
                                 </div>
                             </div>
 
                             {/* Likes */}
-                            <div className="mb-1 text-[13px] font-semibold text-zinc-900">
+                            <div className={`mb-1 text-[13px] font-semibold ${theme === 'dark' ? 'text-zinc-50' : 'text-zinc-900'}`}>
                                 {likes || "1,234"} likes
                             </div>
 
                             {/* Caption */}
-                            <div className="text-[13px] text-zinc-900 leading-[18px]">
+                            <div className={`text-[13px] leading-[18px] ${theme === 'dark' ? 'text-zinc-50' : 'text-zinc-900'}`}>
                                 <span className="font-semibold mr-1">{username || "username"}</span>
                                 {caption || "Living my best life ✨ #vibes"}
                             </div>

@@ -12,6 +12,7 @@ type Message = {
 };
 
 export default function WhatsAppChatGenerator() {
+    const [theme, setTheme] = useState<"light" | "dark">("light");
     const [name, setName] = useState("");
     const [status, setStatus] = useState("");
     const [profilePic, setProfilePic] = useState<string | null>(null);
@@ -71,7 +72,7 @@ export default function WhatsAppChatGenerator() {
             const dataUrl = await toPng(chatRef.current, {
                 cacheBust: true,
                 pixelRatio: 2,
-                backgroundColor: "#efeae2", // WA background color
+                backgroundColor: theme === "dark" ? "#0b141a" : "#efeae2", // WA background color
             });
             const a = document.createElement("a");
             a.href = dataUrl;
@@ -191,6 +192,25 @@ export default function WhatsAppChatGenerator() {
                                 </div>
                             )}
                         </div>
+
+                        <div>
+                            <label className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Chat Theme</label>
+                            <div className="flex bg-zinc-100 rounded-lg p-1 dark:bg-zinc-800">
+                                <button
+                                    onClick={() => setTheme("light")}
+                                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${theme === "light" ? "bg-white text-zinc-900 shadow-sm" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
+                                >
+                                    Light
+                                </button>
+                                <button
+                                    onClick={() => setTheme("dark")}
+                                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${theme === "dark" ? "bg-zinc-900 text-white shadow-sm dark:bg-zinc-700" : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"}`}
+                                >
+                                    Dark
+                                </button>
+                            </div>
+                        </div>
+
                         <button
                             onClick={addMessage}
                             className="w-full rounded-lg bg-zinc-900 px-4 py-2 font-medium text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
@@ -235,11 +255,11 @@ export default function WhatsAppChatGenerator() {
                     {/* Chat Window */}
                     <div
                         ref={chatRef}
-                        className="w-full max-w-[400px] h-[700px] bg-[#efeae2] overflow-hidden flex flex-col relative"
+                        className={`w-full max-w-[400px] h-[700px] overflow-hidden flex flex-col relative ${theme === 'dark' ? 'bg-[#0b141a] text-[#e9edef]' : 'bg-[#efeae2] text-[#111b21]'}`}
                         style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}
                     >
                         {/* Header */}
-                        <div className="bg-[#075E54] text-white px-2 py-2 flex items-center gap-2 shadow-sm z-10 sticky top-0">
+                        <div className={`text-white px-2 py-2 flex items-center gap-2 shadow-sm z-10 sticky top-0 ${theme === 'dark' ? 'bg-[#202c33]' : 'bg-[#075E54]'}`}>
                             <div className="flex items-center">
                                 <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
                                     <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"></path>
@@ -280,22 +300,22 @@ export default function WhatsAppChatGenerator() {
                                         className={`flex flex-col max-w-[80%] ${isMe ? 'self-end' : 'self-start'}`}
                                     >
                                         <div
-                                            className={`relative px-2 py-1.5 rounded-lg text-[14.5px] leading-relaxed shadow-sm flex flex-col ${isMe ? 'bg-[#dcf8c6] rounded-tr-none' : 'bg-white rounded-tl-none'}`}
+                                            className={`relative px-2 py-1.5 rounded-lg text-[14.5px] leading-relaxed shadow-sm flex flex-col ${isMe ? (theme === 'dark' ? 'bg-[#005c4b] rounded-tr-none' : 'bg-[#dcf8c6] rounded-tr-none') : (theme === 'dark' ? 'bg-[#202c33] rounded-tl-none' : 'bg-white rounded-tl-none')}`}
                                         >
                                             {/* Tail */}
                                             {isMe ? (
-                                                <svg viewBox="0 0 8 13" width="8" height="13" className="absolute top-0 -right-2 text-[#dcf8c6]" fill="currentColor">
+                                                <svg viewBox="0 0 8 13" width="8" height="13" className={`absolute top-0 -right-2 ${theme === 'dark' ? 'text-[#005c4b]' : 'text-[#dcf8c6]'}`} fill="currentColor">
                                                     <path d="M5.188 1H0v11.193l6.422-5.487c.725-.62.793-1.714.152-2.428L5.188 1z" />
                                                 </svg>
                                             ) : (
-                                                <svg viewBox="0 0 8 13" width="8" height="13" className="absolute top-0 -left-2 text-white" fill="currentColor">
+                                                <svg viewBox="0 0 8 13" width="8" height="13" className={`absolute top-0 -left-2 ${theme === 'dark' ? 'text-[#202c33]' : 'text-white'}`} fill="currentColor">
                                                     <path d="M1.533 3.568L8 12.193V1H2.812C1.042 1 .474 2.156 1.533 3.568z" />
                                                 </svg>
                                             )}
 
                                             <span className="pr-14 break-words" style={{ paddingRight: isMe ? '4rem' : '3.5rem' }}>{m.text}</span>
                                             <div className="flex items-center gap-1 justify-end mt-[-10px] self-end h-[15px] pb-0.5">
-                                                <span className="text-[10px] text-zinc-500 select-none whitespace-nowrap">{m.time}</span>
+                                                <span className={`text-[10px] select-none whitespace-nowrap ${theme === 'dark' ? 'text-[#8696a0]' : 'text-zinc-500'}`}>{m.time}</span>
                                                 {isMe && (
                                                     <span className="mt-0.5">
                                                         {m.status === "sent" && (
@@ -325,19 +345,19 @@ export default function WhatsAppChatGenerator() {
                         {/* Footer Input Area Placeholder */}
                         <div className="bg-transparent p-2 sticky bottom-0">
                             <div className="flex items-end gap-2 relative">
-                                <div className="flex-1 bg-white rounded-full min-h-[44px] flex items-center px-3 gap-3 shadow-sm">
-                                    <svg viewBox="0 0 24 24" width="24" height="24" className="text-zinc-400 flex-shrink-0" fill="currentColor">
+                                <div className={`flex-1 rounded-full min-h-[44px] flex items-center px-3 gap-3 shadow-sm ${theme === 'dark' ? 'bg-[#2a3942]' : 'bg-white'}`}>
+                                    <svg viewBox="0 0 24 24" width="24" height="24" className={theme === 'dark' ? 'text-[#8696a0]' : 'text-zinc-400'} fill="currentColor">
                                         <path d="M9.153 11.603c.795 0 1.439-.879 1.439-1.962s-.644-1.962-1.439-1.962-1.439.879-1.439 1.962.644 1.962 1.439 1.962zm-3.204 1.362c-.026-.307-.131 5.218 6.063 5.551 6.066-.25 6.066-5.551 6.066-5.551-6.078 1.416-12.129 0-12.129 0zm11.363-1.108s-.669 1.959-5.051 1.959c-3.379 0-5.549-2.158-5.549-2.158-1.586.207-1.071 2.505 5.051 2.505 6.122 0 5.549-2.306 5.549-2.306zm-4.126-2.215c.795 0 1.439-.879 1.439-1.962s-.644-1.962-1.439-1.962-1.439.879-1.439 1.962.644 1.962 1.439 1.962z"></path>
                                     </svg>
-                                    <span className="flex-1 text-zinc-400 text-[15px]">Message</span>
-                                    <svg viewBox="0 0 24 24" width="24" height="24" className="text-zinc-400 flex-shrink-0" fill="currentColor">
+                                    <span className={`flex-1 text-[15px] ${theme === 'dark' ? 'text-[#8696a0]' : 'text-zinc-400'}`}>Message</span>
+                                    <svg viewBox="0 0 24 24" width="24" height="24" className={theme === 'dark' ? 'text-[#8696a0]' : 'text-zinc-400'} fill="currentColor">
                                         <path d="M21.58 12.04l-6.47 5.76v-3.8h-6v-3.92h6V6.3l6.47 5.74zM8.11 16.08h-2v-8.1h2v8.1zM5 16.08H3v-8.1h2v8.1z"></path>
                                     </svg>
-                                    <svg viewBox="0 0 24 24" width="24" height="24" className="text-zinc-400 flex-shrink-0" fill="currentColor">
+                                    <svg viewBox="0 0 24 24" width="24" height="24" className={`mr-1 ${theme === 'dark' ? 'text-[#8696a0]' : 'text-zinc-400'}`} fill="currentColor">
                                         <path d="M12 21.05a9 9 0 110-18 9 9 0 010 18zm0-16a7 7 0 100 14 7 7 0 000-14zm.8 11.23h-1.6v-3h1.6v3zm-.8-3.92a2.33 2.33 0 01-1.35-4.14 2 2 0 112.92-1.6c0 1.05-.62 1.62-1.22 2.14-.54.49-.6.84-.55 1.43.06.66-.4 1.25-.94 1.25-.37 0-.74-.29-.68-.82.1-.96.96-1.57 1.48-1.98.53-.42.92-.76.92-1.41a1.2 1.2 0 10-1.74-1.07c0 .5-.47.9-1.08.77a.89.89 0 01-.73-1.01 2.45 2.45 0 014.93-.05c0 1.26-.95 1.9-1.55 2.46-.5.44-.65.65-.62 1h1.61c.64 0 1 .49.92 1.03h-.62z"></path>
                                     </svg>
                                 </div>
-                                <div className="h-[44px] w-[44px] rounded-full bg-[#00897B] text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                                <div className={`h-[44px] w-[44px] rounded-full flex items-center justify-center flex-shrink-0 shadow-sm ${theme === 'dark' ? 'bg-[#00a884] text-[#111b21]' : 'bg-[#00897B] text-white'}`}>
                                     <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
                                         <path d="M11.999 14.942c2.001 0 3.531-1.53 3.531-3.531V4.35c0-2.001-1.53-3.531-3.531-3.531S8.469 2.35 8.469 4.35v7.061c0 2.001 1.53 3.531 3.53 3.531zm6.238-3.53c0 3.531-2.942 6.002-6.237 6.002s-6.237-2.471-6.237-6.002H3.761c0 4.001 3.178 7.297 7.061 7.885v3.884h2.354v-3.884c3.884-.588 7.061-3.884 7.061-7.885h-2.002z"></path>
                                     </svg>
