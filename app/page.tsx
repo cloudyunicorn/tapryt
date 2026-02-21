@@ -104,6 +104,8 @@ const categories = [
       { name: "Lorem Ipsum", href: "/tools/lorem-ipsum", desc: "Generate placeholder text" },
       { name: "Instagram Caption", href: "/tools/instagram-caption", desc: "Generate random captions" },
       { name: "Instagram Post", href: "/tools/instagram-post", desc: "Create fake IG posts" },
+      { name: "Twitter (X) Post", href: "/tools/twitter-post", desc: "Create fake Tweets" },
+      { name: "WhatsApp Chat", href: "/tools/whatsapp-chat", desc: "Create fake WA chats" },
     ],
   },
   {
