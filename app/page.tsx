@@ -105,6 +105,21 @@ const categories = [
     ],
   },
   {
+    name: "File Convert",
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+      </svg>
+    ),
+    color: "bg-teal-500",
+    tools: [
+      { name: "Image Converter", href: "/tools/image-converter", desc: "Convert PNG, JPG, WebP formats" },
+      { name: "CSV ↔ JSON", href: "/tools/csv-json", desc: "Convert between CSV and JSON" },
+      { name: "Markdown → HTML", href: "/tools/markdown-html", desc: "Convert Markdown to HTML" },
+      { name: "PDF → Word", href: "/tools/pdf-to-word", desc: "Convert PDF to Word document" },
+    ],
+  },
+  {
     name: "Reference",
     icon: (
       <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
