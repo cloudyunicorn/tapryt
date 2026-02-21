@@ -117,6 +117,7 @@ const categories = [
       { name: "CSV ↔ JSON", href: "/tools/csv-json", desc: "Convert between CSV and JSON" },
       { name: "Markdown → HTML", href: "/tools/markdown-html", desc: "Convert Markdown to HTML" },
       { name: "PDF → Word", href: "/tools/pdf-to-word", desc: "Convert PDF to Word document" },
+      { name: "PDF Editor", href: "/tools/pdf-editor", desc: "Edit, annotate & modify PDFs" },
     ],
   },
   {
