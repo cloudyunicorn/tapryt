@@ -3,25 +3,41 @@
 import { useState } from "react";
 
 interface Drink {
-  id: number;
+  id: string;
   type: string;
-  amount: number;
-  alcoholPercent: number;
+  abv: number | string;
+  volume: number | string;
+  volumeUnit: "ml" | "oz";
+  minutesAfterPrevious: number | string;
 }
 
 interface BACResult {
   bac: number;
   safeToDrive: boolean;
-  timeToZero: number;
+  hoursToSafe: number;
+  hoursToZero: number;
   effects: string;
+  safeLimit: number;
 }
 
-const drinkTypes = [
-  { name: "Beer (12 oz)", amount: 12, alcoholPercent: 5 },
-  { name: "Wine (5 oz)", amount: 5, alcoholPercent: 12 },
-  { name: "Shot (1.5 oz)", amount: 1.5, alcoholPercent: 40 },
-  { name: "Malt Liquor (12 oz)", amount: 12, alcoholPercent: 7 },
-  { name: "Cooler (12 oz)", amount: 12, alcoholPercent: 5 },
+const countries = [
+  { name: "USA (0.08%)", limit: 0.08 },
+  { name: "UK - England/Wales (0.08%)", limit: 0.08 },
+  { name: "Canada (0.08%)", limit: 0.08 },
+  { name: "Australia (0.05%)", limit: 0.05 },
+  { name: "UK - Scotland (0.05%)", limit: 0.05 },
+  { name: "India (0.03%)", limit: 0.03 },
+  { name: "Zero Tolerance (0.00%)", limit: 0.00 },
+];
+
+const drinkPresets = [
+  { name: "Beer", abv: 5, defaultVolume: 330, defaultUnit: "ml" },
+  { name: "Wine", abv: 12, defaultVolume: 150, defaultUnit: "ml" },
+  { name: "Vodka", abv: 40, defaultVolume: 44, defaultUnit: "ml" },
+  { name: "Whiskey", abv: 40, defaultVolume: 44, defaultUnit: "ml" },
+  { name: "Rum", abv: 40, defaultVolume: 44, defaultUnit: "ml" },
+  { name: "Tequila", abv: 40, defaultVolume: 44, defaultUnit: "ml" },
+  { name: "Custom", abv: 5, defaultVolume: 100, defaultUnit: "ml" },
 ];
 
 const bacLevels = [
@@ -36,218 +52,393 @@ const bacLevels = [
 ];
 
 export default function BACCalculator() {
+  const generateId = () => Math.random().toString(36).substring(2, 9);
+
   const [weight, setWeight] = useState<string>("");
+  const [weightUnit, setWeightUnit] = useState<"kg" | "lbs">("kg");
   const [gender, setGender] = useState<"male" | "female">("male");
+  const [country, setCountry] = useState<string>(countries[0].name);
+  const [minutesSinceLast, setMinutesSinceLast] = useState<string>("0");
+
   const [drinks, setDrinks] = useState<Drink[]>([
-    { id: 1, type: "Beer (12 oz)", amount: 12, alcoholPercent: 5 },
+    {
+      id: generateId(),
+      type: "Custom",
+      abv: "",
+      volume: "",
+      volumeUnit: "ml",
+      minutesAfterPrevious: "",
+    },
   ]);
-  const [hours, setHours] = useState<string>("1");
   const [result, setResult] = useState<BACResult | null>(null);
 
   const addDrink = () => {
-    const newId = drinks.length > 0 ? Math.max(...drinks.map((d) => d.id)) + 1 : 1;
-    setDrinks([...drinks, { ...drinks[0], id: newId }]);
+    setDrinks([
+      ...drinks,
+      {
+        id: generateId(),
+        type: "Custom",
+        abv: "",
+        volume: "",
+        volumeUnit: "ml",
+        minutesAfterPrevious: "",
+      },
+    ]);
   };
 
-  const removeDrink = (id: number) => {
+  const removeDrink = (id: string) => {
+    if (drinks.length === 1) return;
     setDrinks(drinks.filter((d) => d.id !== id));
   };
 
-  const updateDrink = (id: number, field: keyof Drink, value: string | number) => {
+  const updateDrink = (id: string, field: keyof Drink, value: any) => {
     setDrinks(
       drinks.map((d) => {
-        if (d.id === id) {
-          const updated = { ...d, [field]: value };
-          if (field === "type") {
-            const drinkType = drinkTypes.find((dt) => dt.name === value);
-            if (drinkType) {
-              updated.amount = drinkType.amount;
-              updated.alcoholPercent = drinkType.alcoholPercent;
-            }
+        if (d.id !== id) return d;
+
+        if (field === "type") {
+          const preset = drinkPresets.find((p) => p.name === value);
+          if (preset) {
+            return {
+              ...d,
+              type: value as string,
+              abv: preset.abv,
+              volume: preset.defaultVolume,
+              volumeUnit: preset.defaultUnit as "ml" | "oz",
+            };
           }
-          return updated;
         }
-        return d;
+        return { ...d, [field]: value };
       })
     );
   };
 
   const calculate = () => {
     const weightNum = parseFloat(weight);
-    const hoursNum = parseFloat(hours);
+    const minsSinceLastNum = parseFloat(minutesSinceLast || "0");
 
-    if (isNaN(weightNum) || weightNum <= 0 || isNaN(hoursNum)) return;
+    if (isNaN(weightNum) || weightNum <= 0) return;
 
-    const totalAlcoholOz = drinks.reduce((sum, drink) => {
-      return sum + (drink.amount * drink.alcoholPercent) / 100;
-    }, 0);
-
+    // Convert weight to grams
+    const weightGrams = weightUnit === "kg" ? weightNum * 1000 : weightNum * 453.592;
     const r = gender === "male" ? 0.68 : 0.55;
-    const weightLb = weightNum * 2.20462;
-    const bacBeforeMetabolism = (totalAlcoholOz * 5.14) / (weightLb * r);
-    const metabolismRate = 0.015;
-    const bac = Math.max(0, bacBeforeMetabolism - metabolismRate * hoursNum);
 
-    const timeToZero = bac > 0 ? Math.ceil(bac / 0.015) : 0;
-    const legalLimit = 0.08;
-    const safeToDrive = bac < legalLimit;
+    let currentBAC = 0;
+
+    for (let i = 0; i < drinks.length; i++) {
+      const drink = drinks[i];
+
+      // Metabolism for interval between drinks
+      if (i > 0) {
+        const hoursPassed = (Number(drink.minutesAfterPrevious) || 0) / 60;
+        currentBAC -= hoursPassed * 0.015;
+        if (currentBAC < 0) currentBAC = 0;
+      }
+
+      // Add BAC contribution of the current drink
+      const volumeNum = Number(drink.volume) || 0;
+      const abvNum = Number(drink.abv) || 0;
+      const volumeMl = drink.volumeUnit === "oz" ? volumeNum * 29.5735 : volumeNum;
+      const alcoholGrams = volumeMl * (abvNum / 100) * 0.789;
+      const bacContribution = (alcoholGrams / (weightGrams * r)) * 100;
+      currentBAC += bacContribution;
+    }
+
+    // Apply metabolism for time passed since the LAST drink
+    currentBAC -= (minsSinceLastNum / 60) * 0.015;
+    if (currentBAC < 0) currentBAC = 0;
+
+    const selectedCountry = countries.find((c) => c.name === country) || countries[0];
+    const safeLimit = selectedCountry.limit;
+
+    let hoursToSafe = 0;
+    if (currentBAC > safeLimit) {
+      hoursToSafe = (currentBAC - safeLimit) / 0.015;
+    }
+
+    let hoursToZero = 0;
+    if (currentBAC > 0) {
+      hoursToZero = currentBAC / 0.015;
+    }
+
+    const safeToDrive = currentBAC < safeLimit;
 
     let effects = "";
-    for (const level of bacLevels) {
-      if (bac <= level.limit) {
-        effects = level.effects;
-        break;
+    if (currentBAC === 0) {
+      effects = "Normal, no impairment";
+    } else {
+      for (const level of bacLevels) {
+        if (currentBAC <= level.limit) {
+          effects = level.effects;
+          break;
+        }
       }
+      if (!effects && currentBAC > 0.4) effects = "Life-threatening, seek medical attention";
     }
-    if (!effects && bac > 0.40) effects = "Life-threatening, seek immediate medical attention";
 
     setResult({
-      bac: Math.round(bac * 10000) / 10000,
+      bac: Math.max(0, currentBAC),
       safeToDrive,
-      timeToZero,
+      hoursToSafe,
+      hoursToZero,
       effects: effects || "Unknown effects",
+      safeLimit,
     });
   };
 
+  const formatTime = (decimalHours: number) => {
+    if (decimalHours <= 0) return "0 mins";
+    const h = Math.floor(decimalHours);
+    const m = Math.round((decimalHours - h) * 60);
+    if (h === 0) return `${m} min${m !== 1 ? "s" : ""}`;
+    if (m === 0) return `${h} hour${h !== 1 ? "s" : ""}`;
+    return `${h}h ${m}m`;
+  };
+
   return (
-    <main className="container mx-auto max-w-2xl px-4 py-8">
-      <h1 className="mb-8 text-3xl font-bold text-zinc-900 dark:text-zinc-50">
-        BAC Calculator
+    <main className="container mx-auto max-w-3xl px-4 py-8">
+      <h1 className="mb-4 text-3xl font-bold text-zinc-900 dark:text-zinc-50">
+        Holistic BAC Calculator
       </h1>
+      <p className="mb-8 text-zinc-600 dark:text-zinc-400">
+        Estimate your Blood Alcohol Content based on a timeline of drinks, and find out when you'll be within safe legal limits for driving based on your country.
+      </p>
 
       <div className="rounded-2xl border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mb-6 grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-600 dark:text-zinc-400">
-              Weight (kg)
+        <h2 className="mb-4 font-semibold text-zinc-900 dark:text-zinc-50">Body Profile & Rules</h2>
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="col-span-1 lg:col-span-2">
+            <label className="mb-2 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              Weight
             </label>
-            <input
-              type="number"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-              placeholder="Enter weight"
-              className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-            />
-          </div>
-          <div>
-            <label className="mb-2 block text-sm font-medium text-zinc-600 dark:text-zinc-400">
-              Gender
-            </label>
-            <div className="flex gap-4 pt-3">
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="gender"
-                  value="male"
-                  checked={gender === "male"}
-                  onChange={() => setGender("male")}
-                  className="h-4 w-4"
-                />
-                <span className="text-zinc-900 dark:text-zinc-50">Male</span>
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="radio"
-                  name="gender"
-                  value="female"
-                  checked={gender === "female"}
-                  onChange={() => setGender("female")}
-                  className="h-4 w-4"
-                />
-                <span className="text-zinc-900 dark:text-zinc-50">Female</span>
-              </label>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+                placeholder="Weight"
+                className="flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 focus:border-amber-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+              />
+              <select
+                value={weightUnit}
+                onChange={(e) => setWeightUnit(e.target.value as "kg" | "lbs")}
+                className="w-20 rounded-lg border border-zinc-200 bg-zinc-50 px-2 py-2 text-zinc-900 focus:border-amber-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+              >
+                <option value="kg">kg</option>
+                <option value="lbs">lbs</option>
+              </select>
             </div>
           </div>
-        </div>
-
-        <div className="mb-6">
-          <label className="mb-2 block text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            Hours since first drink
-          </label>
-          <input
-            type="number"
-            value={hours}
-            onChange={(e) => setHours(e.target.value)}
-            placeholder="Enter hours"
-            className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-          />
-        </div>
-
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-              Drinks Consumed
+          <div>
+            <label className="mb-2 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              Gender
             </label>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value as "male" | "female")}
+              className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 focus:border-amber-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+            >
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+            </select>
+          </div>
+          <div>
+            <label className="mb-2 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              Driving Location
+            </label>
+            <select
+              value={country}
+              onChange={(e) => setCountry(e.target.value)}
+              className="w-full rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-zinc-900 focus:border-amber-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+            >
+              {countries.map((c) => (
+                <option key={c.name} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="mb-8">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="font-semibold text-zinc-900 dark:text-zinc-50">Drinks Timeline</h2>
             <button
               onClick={addDrink}
-              className="text-sm text-amber-600 hover:text-amber-700"
+              className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-amber-600 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700"
             >
               + Add Drink
             </button>
           </div>
-          <div className="space-y-3">
-            {drinks.map((drink) => (
-              <div key={drink.id} className="flex gap-2 items-center">
-                <select
-                  value={drink.type}
-                  onChange={(e) => updateDrink(drink.id, "type", e.target.value)}
-                  className="flex-1 rounded-lg border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-zinc-900 focus:border-zinc-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
-                >
-                  {drinkTypes.map((dt) => (
-                    <option key={dt.name} value={dt.name}>
-                      {dt.name} ({dt.alcoholPercent}% alcohol)
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={() => removeDrink(drink.id)}
-                  className="p-2 text-zinc-400 hover:text-red-500"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
+          <div className="space-y-4">
+            {drinks.map((drink, index) => (
+              <div
+                key={drink.id}
+                className="relative rounded-xl border border-zinc-200 bg-zinc-50/50 p-4 dark:border-zinc-700/50 dark:bg-zinc-800/30"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+                    {index === 0 ? "1st Drink (Start)" : `Drink ${index + 1}`}
+                  </h3>
+                  {drinks.length > 1 && (
+                    <button
+                      onClick={() => removeDrink(drink.id)}
+                      className="text-zinc-400 hover:text-red-500"
+                      title="Remove Drink"
+                    >
+                      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+
+                {index > 0 && (
+                  <div className="mb-4">
+                    <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                      Minutes after previous drink
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={drink.minutesAfterPrevious}
+                      onChange={(e) => updateDrink(drink.id, "minutesAfterPrevious", e.target.value)}
+                      placeholder="e.g. 60"
+                      className="w-full sm:w-1/2 rounded-md border border-zinc-200 bg-white px-3 py-2 text-zinc-900 focus:border-amber-400 focus:outline-none dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+                    />
+                  </div>
+                )}
+
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Type</label>
+                    <select
+                      value={drink.type}
+                      onChange={(e) => updateDrink(drink.id, "type", e.target.value)}
+                      className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-zinc-900 focus:border-amber-400 focus:outline-none dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+                    >
+                      {drinkPresets.map((p) => (
+                        <option key={p.name} value={p.name}>
+                          {p.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Alcohol %</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      value={drink.abv}
+                      onChange={(e) => updateDrink(drink.id, "abv", e.target.value)}
+                      placeholder="%"
+                      className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-zinc-900 focus:border-amber-400 focus:outline-none dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Volume</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={drink.volume}
+                      onChange={(e) => updateDrink(drink.id, "volume", e.target.value)}
+                      placeholder="Volume"
+                      className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-zinc-900 focus:border-amber-400 focus:outline-none dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-zinc-600 dark:text-zinc-400">Unit</label>
+                    <select
+                      value={drink.volumeUnit}
+                      onChange={(e) => updateDrink(drink.id, "volumeUnit", e.target.value)}
+                      className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-zinc-900 focus:border-amber-400 focus:outline-none dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-50"
+                    >
+                      <option value="ml">ml</option>
+                      <option value="oz">oz</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
         </div>
 
+        <div className="mb-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+          <label className="mb-2 block text-sm font-medium text-zinc-600 dark:text-zinc-400">
+            Minutes elapsed since your LAST drink <span className="opacity-75 font-normal">(Leave 0 if right now)</span>
+          </label>
+          <input
+            type="number"
+            min="0"
+            value={minutesSinceLast}
+            onChange={(e) => setMinutesSinceLast(e.target.value)}
+            placeholder="0"
+            className="w-full sm:w-1/2 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 text-zinc-900 placeholder-zinc-400 focus:border-amber-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-50"
+          />
+        </div>
+
         <button
           onClick={calculate}
-          className="w-full rounded-lg bg-amber-500 px-6 py-3 font-medium text-white transition-colors hover:bg-amber-600"
+          className="w-full rounded-lg bg-amber-500 px-6 py-4 font-bold text-white shadow-md transition-colors hover:bg-amber-600 text-lg"
         >
-          Calculate BAC
+          Calculate My BAC
         </button>
 
         {result && (
-          <div className="mt-6 space-y-4">
-            <div className={`rounded-xl p-6 text-center ${result.safeToDrive ? "bg-emerald-100 dark:bg-emerald-900/30" : "bg-red-100 dark:bg-red-900/30"}`}>
-              <p className="text-sm text-zinc-600 dark:text-zinc-400">Estimated BAC</p>
-              <p className="text-4xl font-bold text-zinc-900 dark:text-zinc-50">
+          <div className="mt-8 space-y-4">
+            <div
+              className={`rounded-2xl p-8 text-center border ${result.safeToDrive
+                ? "border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-900/20"
+                : "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20"
+                }`}
+            >
+              <p className="text-sm font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Current Estimated BAC
+              </p>
+              <p className="my-2 text-6xl font-black text-zinc-900 dark:text-zinc-50">
                 {result.bac.toFixed(4)}%
               </p>
-              <p className={`mt-2 font-medium ${result.safeToDrive ? "text-emerald-600" : "text-red-600"}`}>
-                {result.safeToDrive ? "May be safe to drive (depends on local laws)" : "Do NOT drive"}
+              <p
+                className={`text-lg font-bold ${result.safeToDrive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"
+                  }`}
+              >
+                {result.safeToDrive
+                  ? `May be safe to drive (Limit: ${result.safeLimit.toFixed(2)}%)`
+                  : `DO NOT DRIVE (Limit: ${result.safeLimit.toFixed(2)}%)`}
               </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="rounded-xl bg-zinc-100 p-4 dark:bg-zinc-800">
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">Time to Zero BAC</p>
-                <p className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-                  ~{result.timeToZero} {result.timeToZero === 1 ? "hour" : "hours"}
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="flex flex-col justify-center rounded-xl bg-zinc-100 p-5 dark:bg-zinc-800">
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  Time until Safe
+                </p>
+                <p className="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+                  {formatTime(result.hoursToSafe)}
                 </p>
               </div>
-              <div className="rounded-xl bg-zinc-100 p-4 dark:bg-zinc-800">
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">Expected Effects</p>
-                <p className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
+              <div className="flex flex-col justify-center rounded-xl bg-zinc-100 p-5 dark:bg-zinc-800">
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  Time until completely sober
+                </p>
+                <p className="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+                  {formatTime(result.hoursToZero)}
+                </p>
+              </div>
+              <div className="flex flex-col justify-center rounded-xl bg-zinc-100 p-5 dark:bg-zinc-800">
+                <p className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  Expected Effects
+                </p>
+                <p className="mt-1 text-sm font-medium leading-snug text-zinc-900 dark:text-zinc-50">
                   {result.effects}
                 </p>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-500 dark:text-zinc-400">
-              Disclaimer: This calculator provides an estimate only. Actual BAC varies based on many factors including metabolism, food consumption, medications, and individual differences. Never drink and drive.
+            <p className="mt-4 text-center text-xs leading-relaxed text-zinc-400 dark:text-zinc-500">
+              Disclaimer: This calculator yields only an estimate based on the Widmark formula. Actual BAC fluctuates based on food consumed, medication, personal metabolism, hydration, and other variations. Zero Tolerance is always the safest limit for driving.
             </p>
           </div>
         )}

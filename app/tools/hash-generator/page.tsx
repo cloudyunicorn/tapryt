@@ -12,34 +12,16 @@ export default function HashGenerator() {
     const encoder = new TextEncoder();
     const data = encoder.encode(input);
 
-    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const sha256 = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+    const hashAlgorithms = ["SHA-1", "SHA-256", "SHA-384", "SHA-512"];
+    const results: Record<string, string> = {};
 
-    const md5Chars = "0123456789abcdef";
-    let md5 = "";
-    for (let i = 0; i < 32; i++) {
-      md5 += md5Chars[Math.floor(Math.random() * 16)];
+    for (const algo of hashAlgorithms) {
+      const hashBuffer = await crypto.subtle.digest(algo, data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      results[algo] = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
     }
 
-    const sha1Chars = "0123456789abcdef";
-    let sha1 = "";
-    for (let i = 0; i < 40; i++) {
-      sha1 += sha1Chars[Math.floor(Math.random() * 16)];
-    }
-
-    const sha512Chars = "0123456789abcdef";
-    let sha512 = "";
-    for (let i = 0; i < 128; i++) {
-      sha512 += sha512Chars[Math.floor(Math.random() * 16)];
-    }
-
-    setHashes({
-      MD5: md5,
-      "SHA-1": sha1,
-      "SHA-256": sha256,
-      "SHA-512": sha512,
-    });
+    setHashes(results);
   };
 
   const copyToClipboard = (text: string) => {
@@ -92,7 +74,7 @@ export default function HashGenerator() {
         </div>
 
         <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
-          Note: MD5 and SHA-1 are for demonstration only and are not cryptographically secure.
+          Note: Computed entirely in your browser. SHA-1 is considered cryptographically unsafe and is provided for legacy compatibility.
         </p>
       </div>
     </main>

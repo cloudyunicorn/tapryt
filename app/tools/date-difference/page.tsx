@@ -15,22 +15,22 @@ export default function DateDifference() {
 
   const calculate = () => {
     if (!startDate || !endDate) return;
-    
+
     const start = new Date(startDate);
     const end = new Date(endDate);
-    
+
     if (isNaN(start.getTime()) || isNaN(end.getTime())) return;
-    
-    const diffTime = end.getTime() - start.getTime();
-    const totalDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    
+
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const totalDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
     const years = Math.floor(totalDays / 365);
     const remainingAfterYears = totalDays % 365;
     const months = Math.floor(remainingAfterYears / 30);
     const remainingAfterMonths = remainingAfterYears % 30;
     const weeks = Math.floor(remainingAfterMonths / 7);
     const days = remainingAfterMonths % 7;
-    
+
     setResult({
       days,
       weeks,

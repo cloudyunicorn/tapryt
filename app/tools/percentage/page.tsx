@@ -73,11 +73,10 @@ export default function PercentageCalculator() {
               setNum2("");
               setResult("");
             }}
-            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-              calcType === item.key
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${calcType === item.key
                 ? "bg-blue-600 text-white"
                 : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
-            }`}
+              }`}
           >
             {item.label}
           </button>
@@ -129,7 +128,7 @@ export default function PercentageCalculator() {
           <div className="mt-6 rounded-xl bg-blue-50 p-6 text-center dark:bg-blue-900/30">
             <p className="text-sm text-blue-600 dark:text-blue-400">Result</p>
             <p className="text-3xl font-bold text-blue-900 dark:text-blue-50">
-              {result}%
+              {calcType === "percentageOf" ? result : `${result}%`}
             </p>
           </div>
         )}

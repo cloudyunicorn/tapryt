@@ -12,9 +12,18 @@ export default function Base64Tool() {
     setError("");
     try {
       if (mode === "encode") {
-        setOutput(btoa(input));
+        const bytes = new TextEncoder().encode(input);
+        const binString = Array.from(bytes, (byte) =>
+          String.fromCodePoint(byte),
+        ).join("");
+        setOutput(btoa(binString));
       } else {
-        setOutput(atob(input));
+        const binString = atob(input);
+        const bytes = new Uint8Array(binString.length);
+        for (let i = 0; i < binString.length; i++) {
+          bytes[i] = binString.codePointAt(i) || 0;
+        }
+        setOutput(new TextDecoder().decode(bytes));
       }
     } catch (e) {
       setError("Invalid input for Base64 decoding");
@@ -43,11 +52,10 @@ export default function Base64Tool() {
                 setOutput("");
                 setError("");
               }}
-              className={`flex-1 rounded-lg px-4 py-2 font-medium capitalize transition-colors ${
-                mode === m
+              className={`flex-1 rounded-lg px-4 py-2 font-medium capitalize transition-colors ${mode === m
                   ? "bg-sky-600 text-white"
                   : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
-              }`}
+                }`}
             >
               {m}
             </button>

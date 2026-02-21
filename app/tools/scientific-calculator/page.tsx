@@ -26,7 +26,7 @@ export default function ScientificCalculator() {
   const handleFunction = (func: string) => {
     const num = parseFloat(display);
     let result = 0;
-    
+
     switch (func) {
       case "sin":
         result = Math.sin((num * Math.PI) / 180);
@@ -59,7 +59,7 @@ export default function ScientificCalculator() {
         result = -num;
         break;
     }
-    
+
     setDisplay(formatResult(result));
     setShouldReset(true);
   };
@@ -67,6 +67,7 @@ export default function ScientificCalculator() {
   const factorial = (n: number): number => {
     if (n < 0) return NaN;
     if (n <= 1) return 1;
+    if (n > 170) return Infinity;
     let result = 1;
     for (let i = 2; i <= n; i++) result *= i;
     return result;
@@ -178,17 +179,16 @@ export default function ScientificCalculator() {
             <button
               key={i}
               onClick={() => handleClick(btn)}
-              className={`rounded-lg py-3 text-sm font-medium transition-colors ${
-                btn.type === "num"
+              className={`rounded-lg py-3 text-sm font-medium transition-colors ${btn.type === "num"
                   ? "bg-zinc-700 text-white hover:bg-zinc-600"
                   : btn.type === "op"
-                  ? "bg-orange-500 text-white hover:bg-orange-600"
-                  : btn.type === "func"
-                  ? "bg-zinc-600 text-cyan-400 hover:bg-zinc-500"
-                  : btn.type === "equals"
-                  ? "bg-green-500 text-white hover:bg-green-600"
-                  : "bg-zinc-600 text-white hover:bg-zinc-500"
-              }`}
+                    ? "bg-orange-500 text-white hover:bg-orange-600"
+                    : btn.type === "func"
+                      ? "bg-zinc-600 text-cyan-400 hover:bg-zinc-500"
+                      : btn.type === "equals"
+                        ? "bg-green-500 text-white hover:bg-green-600"
+                        : "bg-zinc-600 text-white hover:bg-zinc-500"
+                }`}
             >
               {btn.label}
             </button>

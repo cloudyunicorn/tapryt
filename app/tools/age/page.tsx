@@ -14,31 +14,37 @@ export default function AgeCalculator() {
 
   const calculate = () => {
     if (!birthDate) return;
-    
-    const birth = new Date(birthDate);
+
+    const [year, month, day] = birthDate.split('-').map(Number);
+    const birth = new Date(year, month - 1, day);
+
     const today = new Date();
-    
+    today.setHours(0, 0, 0, 0);
+
     let years = today.getFullYear() - birth.getFullYear();
     let months = today.getMonth() - birth.getMonth();
     let days = today.getDate() - birth.getDate();
-    
+
     if (days < 0) {
       months--;
-      days += 30;
+      // Get the number of days in the previous month
+      const prevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      days += prevMonth.getDate();
     }
     if (months < 0) {
       years--;
       months += 12;
     }
-    
-    const totalDays = Math.floor((today.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
-    
+
+    // Use Math.round to avoid issues with daylight saving time transitions
+    const totalDays = Math.round((today.getTime() - birth.getTime()) / (1000 * 60 * 60 * 24));
+
     const nextBirthday = new Date(today.getFullYear(), birth.getMonth(), birth.getDate());
     if (nextBirthday < today) {
       nextBirthday.setFullYear(today.getFullYear() + 1);
     }
-    const daysUntilBirthday = Math.ceil((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
+    const daysUntilBirthday = Math.round((nextBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
     setResult({ years, months, days, totalDays, nextBirthday: daysUntilBirthday });
   };
 

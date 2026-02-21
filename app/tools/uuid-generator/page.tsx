@@ -17,11 +17,13 @@ export default function UUIDGenerator() {
       if (version === "4") {
         newUuids.push(crypto.randomUUID());
       } else {
-        const ts = Date.now();
-        const randomPart = Array.from({ length: 12 }, () => 
-          Math.floor(Math.random() * 16).toString(16)
-        ).join("");
-        newUuids.push(`${ts.toString(16).padStart(13, "0")}-${randomPart.slice(0, 4)}-7${randomPart.slice(4, 7)}-${(parseInt(randomPart.slice(7, 8), 16) & 0x3 | 0x8).toString(16)}${randomPart.slice(8, 12)}-${randomPart.slice(12)}`);
+        const tsHex = Date.now().toString(16).padStart(12, "0");
+        const timeHigh = tsHex.slice(0, 8);
+        const timeLow = tsHex.slice(8, 12);
+        const randA = Array.from({ length: 3 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+        const variantAndRandBHigh = (8 | Math.floor(Math.random() * 4)).toString(16);
+        const randB = Array.from({ length: 15 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
+        newUuids.push(`${timeHigh}-${timeLow}-7${randA}-${variantAndRandBHigh}${randB.slice(0, 3)}-${randB.slice(3)}`);
       }
     }
     setUuids(newUuids);

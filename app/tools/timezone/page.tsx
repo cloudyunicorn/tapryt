@@ -34,18 +34,23 @@ export default function TimezoneConverter() {
 
   const convert = () => {
     const [hours, minutes] = baseTime.split(":").map(Number);
-    const base = new Date(baseDate);
-    base.setHours(hours, minutes, 0, 0);
+    const [year, month, day] = baseDate.split("-").map(Number);
+
+    // Calculate the base time entirely in UTC to bypass browser timezone issues
+    const baseUTC = Date.UTC(year, month - 1, day, hours, minutes, 0, 0);
 
     const results = timezones
       .filter((tz) => tz.offset !== baseTimezone)
       .map((tz) => {
-        const offsetDiff = (tz.offset - baseTimezone) * 60;
-        const converted = new Date(base.getTime() + offsetDiff * 60000);
+        // Find difference between target offset and base offset
+        const offsetDiffHours = tz.offset - baseTimezone;
+        const convertedUTC = baseUTC + offsetDiffHours * 60 * 60 * 1000;
+        const convertedDate = new Date(convertedUTC);
+
         return {
           name: tz.name,
-          time: converted.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true }),
-          date: converted.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+          time: convertedDate.toLocaleTimeString("en-US", { timeZone: "UTC", hour: "2-digit", minute: "2-digit", hour12: true }),
+          date: convertedDate.toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" }),
           offset: tz.offset,
         };
       });
