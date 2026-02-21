@@ -103,6 +103,7 @@ const categories = [
       { name: "Color Converter", href: "/tools/color-converter", desc: "HEX, RGB, HSL conversion" },
       { name: "Lorem Ipsum", href: "/tools/lorem-ipsum", desc: "Generate placeholder text" },
       { name: "Instagram Caption", href: "/tools/instagram-caption", desc: "Generate random captions" },
+      { name: "Instagram Post", href: "/tools/instagram-post", desc: "Create fake IG posts" },
     ],
   },
   {
